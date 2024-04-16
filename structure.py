@@ -5,7 +5,10 @@ def document():
 
     tex_config = {
         "filename" : 'report',
+        "ext" : '.tex',
         "folder" : 'output',
+        "template" : 'views/document.tex',
+        "responses" : 'responses.csv',
         "TITLE" : 'Badanie wpływu bólu kręgosłupa na jakość życia wśród personelu pielęgniarskiego',
         "AUTHOR" : 'Aleksandra Żaba',
         "sections" : [

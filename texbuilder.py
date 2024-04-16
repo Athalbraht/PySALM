@@ -85,7 +85,7 @@ class Section():
             ]
             for rp in replaces:
                 content = content.replace(rp, self.config[rp])
-        with open(self.config['file'], 'w') as report:
+        with open(self.config['file']+self.config['ext'], 'w') as report:
             report.write(content)
 
     def __repr__(self):
