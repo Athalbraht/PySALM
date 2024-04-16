@@ -1,0 +1,125 @@
+\documentclass{article}
+
+\usepackage[polish]{babel}
+\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+\usepackage{verbatim} 
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\usepackage{cite}
+\usepackage{abstract}
+\usepackage{wrapfig}
+\usepackage{mathrsfs,amsmath} 
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage[T1]{fontenc}
+\usepackage[polish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{subcaption}
+\usepackage{multicol}
+\usepackage{cleveref}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage[normalem]{ulem}
+\setlength{\headheight}{12pt} 
+\setlength{\textheight}{25cm}
+\setlength{\textwidth}{17cm}
+\setlength{\footskip}{10mm}
+\setlength{\oddsidemargin}{0mm}
+\setlength{\evensidemargin}{0mm}
+\setlength{\topmargin}{0mm}
+\setlength{\headsep}{10mm}
+
+
+\newbox\flinebox 
+\newbox\slinebox
+\newbox\mlinebox
+
+%\usepackage[firstpage=true]{background}
+\usepackage[]{background}
+\usepackage{eso-pic}
+\makeatletter
+\let \AddEverypageHook \AddToShipoutPictureFG
+\renewcommand\AddThispageHook{\AddToShipoutPictureFG*}
+\ifbg@some
+  \AddThispageHook{}
+\else
+  \AddEverypageHook{\bg@material}
+\fi
+\makeatother
+\backgroundsetup{
+	contents={\large{PRELIMINARY}},
+	%contents={\includegraphics{assets/watermark}},
+	angle=45,
+	scale=9,
+	color=red,
+	opacity=0.05
+}
+
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+ 
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstset{style=mystyle}
+
+\selectlanguage{polish}
+
+\newgeometry{rmargin=2.5cm,lmargin=2.5cm,bmargin=2.5cm}
+\pagestyle{fancy}
+\rhead{\nouppercase{ \leftmark}}
+
+\chead{}
+\lhead{}
+\lfoot{}
+\cfoot{\thepage  }
+\rfoot{}
+
+
+\renewcommand\listfigurename{}
+\renewcommand\listtablename{}
+
+\title{TITLE}
+\author{AUTHOR}
+
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+\newpage
+
+CONTENT_BLOCK
+
+\section{Tabele szczegółowe}
+
+\listoffigures
+\listoftables
+
+\end{document}
