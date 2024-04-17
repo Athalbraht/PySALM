@@ -4,20 +4,6 @@ from conf import structure
 from typing import Protocol
 
 
-class FlagStrategy(Protocol):
-    pass
-
-
-class Order():
-
-    def __init__(self, flg, kind, ctx, mode, loc):
-        self.flg = flg
-        self.kind = kind
-        self.ctx = ctx
-        self.mode = mode
-        self.loc = loc
-
-
 class OrderObject():
 
     def __init__(self, id, flg, kind, ctx, mode, loc):
@@ -33,6 +19,8 @@ class OrderObject():
     def create_command(self):
         pass
 
+    def execute(self):
+        pass
 
     def __repr__(self):
         return "{}:{}:{}:{}:{}".format(
@@ -116,14 +104,21 @@ class Loader():
         medium = []
         low = []
         for i in self.instructions:
-            pass
+            self.queue.append(i)
         high.extend(medium)
         high.extend(low)
-        self.queue = high
 
     def execute_queue(self):
         print("\t- Executing analysis instructions")
-        pass
+        for instruction in self.queue:
+            try:
+                print("\t\t- Executing command: {}: ".format(instruction.id), end='')
+                instruction.execute()
+            except Exception as e:
+                print(fm("Fail", 'red'))
+                print("\t\t{}".format(e))
+            else:
+                print(fm("Pass", 'green'))
 
 
 class Session:
