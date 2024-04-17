@@ -1,5 +1,5 @@
-from manager import Session
 from conf import tex_config
+from manager import Session
 
 if __name__ == "__main__":
     analysis = Session(tex_config)

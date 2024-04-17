@@ -1,6 +1,7 @@
 import pandas as pd
-from conf import tab_path
+
 from addons import fix_desc
+from conf import tab_path
 
 
 def table_gen(data, name, col, crosstabs=[], aliases=[]):

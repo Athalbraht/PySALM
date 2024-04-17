@@ -1,12 +1,13 @@
-from addons import fm
-from texbuilder import Section
-from conf import structure
 from typing import Protocol
+
+from addons import fm
+from conf import structure
+from texbuilder import Section
 
 
 class OrderObject():
 
-    def __init__(self, id, flg, kind, ctx, mode, loc):
+    def __init__(self, id: int, flg: str, kind: str, ctx: str, mode: str, loc: str):
         self.id = id
         self.flg = flg
         self.kind = kind
@@ -14,10 +15,7 @@ class OrderObject():
         self.mode = mode
         self.loc = loc
 
-        self.calculated = False
-
-    def create_command(self):
-        pass
+        self.calculated : bool = False
 
     def execute(self):
         pass
@@ -29,6 +27,7 @@ class OrderObject():
             self.kind,
             self.ctx,
             self.mode,
+            self.calculated
         )
 
 
@@ -40,15 +39,6 @@ class Loader():
         self.queue = []
         self.last_id = 0
         """Translate user instructions to func execute type."""
-
-    def open_file(self, ctx):
-        pass
-
-    def generate(self, ctx):
-        pass
-
-    def load(self, ctx):
-        pass
 
     def create_id(self):
         self.last_id += 1
@@ -74,28 +64,6 @@ class Loader():
         _obj = OrderObject(**params)
         self.instructions.append(_obj)
         return _obj
-
-        # if flg == 'file':
-        #    self.open_file(ctx)
-        # elif flg == 'load':
-        #    self.load(ctx)
-        # elif flg == 'gen':
-        #    self.generate(ctx)
-
-        # if kind == 'desc':
-        #    pass
-        # elif kind == 'plot':
-        #    pass
-        # elif kind == 'table':
-        #    pass
-
-        # return tex_order
-        # nr = 'random'
-        # nu = 'uniqe'
-        # ng = 'global'
-        # ns = 'static'
-        # np = 'paraphrase'
-        # pass
 
     def organize(self):
         """Define priority of instructions."""
@@ -124,7 +92,7 @@ class Loader():
 class Session:
     """DOCssd."""
 
-    def __init__(self, tex_config):
+    def __init__(self, tex_config: dict):
         """Session manager for analysis session."""
         self.loader = Loader()
         self.document = Section("Report", config=tex_config, init=True)

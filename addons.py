@@ -1,8 +1,8 @@
-from conf import tab_path
-from alias import c
 from click import style
-from conf import nominal_data, ordinal_data, quantitative_data
 from pandas import DataFrame
+
+from alias import c
+from conf import nominal_data, ordinal_data, quantitative_data, tab_path
 
 
 def fm(txt, color='green'):

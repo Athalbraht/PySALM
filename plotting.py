@@ -1,7 +1,8 @@
-from click import style
 import matplotlib.pyplot as plt
+from click import style
+
 from addons import type_detector
-from conf import sns_api, pic_path, pic_ext, sns
+from conf import pic_ext, pic_path, sns, sns_api
 
 
 def plot(data, pset, labels=[False, False], **conf):

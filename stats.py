@@ -2,7 +2,9 @@ import numpy as np
 import scipy as sp
 from click import style
 from pandas import crosstab
-from conf import pval, crv
+
+from conf import crv, pval
+
 
 def chi_ind(data, question, group):
     """Chi2 test of indepedence."""

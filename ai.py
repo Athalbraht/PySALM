@@ -1,5 +1,5 @@
 from openai import OpenAI
-from pandas import read_csv, DataFrame
+from pandas import DataFrame, read_csv
 
 
 class Responses(DataFrame):
