@@ -5,6 +5,9 @@ from conf import nominal_data, ordinal_data, quantitative_data
 from pandas import DataFrame
 
 
+def fm(txt, color='green'):
+    return style(txt, fg=color)
+
 def cc(name):
     """Convert column name to short alias."""
     return list(c.keys())[list(c.values()).index('aaa')]
