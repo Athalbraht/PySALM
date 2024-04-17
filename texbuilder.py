@@ -56,7 +56,7 @@ class Section():
     def add_section(self, title, *args, **kwargs):
         """Create instance of yourself and add to dict."""
         new_head = self.head + "sub"
-        #print("{}\t- {}section {} added".format(self.tabulators, new_head, title))
+        # print("{}\t- {}section {} added".format(self.tabulators, new_head, title))
         self.sections[title] = Section(title, head=new_head, depth=self.depth + 1, config=self.config, *args, **kwargs)
         return self.sections[title]
 
@@ -101,6 +101,8 @@ class Section():
             _obj = obj.add_section(section)
             if isinstance(value, dict):
                 self.build(value, _obj)
+            else:
+                self.queue.append(value)
 
     def __repr__(self):
         """Make self.sections readable."""

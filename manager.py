@@ -5,8 +5,7 @@ from typing import Protocol
 
 
 class FlagStrategy(Protocol):
-    def 
-
+    pass
 
 
 class Order():
@@ -19,12 +18,39 @@ class Order():
         self.loc = loc
 
 
+class OrderObject():
+
+    def __init__(self, id, flg, kind, ctx, mode, loc):
+        self.id = id
+        self.flg = flg
+        self.kind = kind
+        self.ctx = ctx
+        self.mode = mode
+        self.loc = loc
+
+        self.calculated = False
+
+    def create_command(self):
+        pass
+
+
+    def __repr__(self):
+        return "{}:{}:{}:{}:{}".format(
+            self.id,
+            self.flg,
+            self.kind,
+            self.ctx,
+            self.mode,
+        )
+
+
 class Loader():
     """Loader class."""
 
     def __init__(self):
         self.instructions = []
         self.queue = []
+        self.last_id = 0
         """Translate user instructions to func execute type."""
 
     def open_file(self, ctx):
@@ -36,33 +62,52 @@ class Loader():
     def load(self, ctx):
         pass
 
-    def obj(self, flg, kind, ctx, mode='static', loc='inline', *a, **kwargs):
+    def create_id(self):
+        self.last_id += 1
+        return self.last_id
+
+    def obj(self, flg, kind, ctx, mode='static', loc='inline', *args, **kwargs):
         """"""
 
-        print("\t- Registering {} as {} for {} in {} mode".format(fm(kind), fm(flg, 'yellow'), fm(ctx, 'cyan'), fm(mode, 'red')))
-        self.instructions.append()
+        print("\t- Registering {} as {} for {} in {} mode".format(
+            fm(kind),
+            fm(flg, 'yellow'),
+            fm(ctx, 'cyan'),
+            fm(mode, 'red')))
+        orderID = self.create_id()
+        params = {
+            "id" : orderID,
+            "flg" : flg,
+            "kind" : kind,
+            "ctx" : ctx,
+            "mode" : mode,
+            "loc" : loc,
+        }
+        _obj = OrderObject(**params)
+        self.instructions.append(_obj)
+        return _obj
 
-        if flg == 'file':
-            self.open_file(ctx)
-        elif flg == 'load':
-            self.load(ctx)
-        elif flg == 'gen':
-            self.generate(ctx)
+        # if flg == 'file':
+        #    self.open_file(ctx)
+        # elif flg == 'load':
+        #    self.load(ctx)
+        # elif flg == 'gen':
+        #    self.generate(ctx)
 
-        if kind == 'desc':
-            pass
-        elif kind == 'plot':
-            pass
-        elif kind == 'table':
-            pass
+        # if kind == 'desc':
+        #    pass
+        # elif kind == 'plot':
+        #    pass
+        # elif kind == 'table':
+        #    pass
 
-        return tex_order
-        nr = 'random'
-        nu = 'uniqe'
-        ng = 'global'
-        ns = 'static'
-        np = 'paraphrase'
-        pass
+        # return tex_order
+        # nr = 'random'
+        # nu = 'uniqe'
+        # ng = 'global'
+        # ns = 'static'
+        # np = 'paraphrase'
+        # pass
 
     def organize(self):
         """Define priority of instructions."""
@@ -71,11 +116,14 @@ class Loader():
         medium = []
         low = []
         for i in self.instructions:
-            :
             pass
         high.extend(medium)
         high.extend(low)
         self.queue = high
+
+    def execute_queue(self):
+        print("\t- Executing analysis instructions")
+        pass
 
 
 class Session:
