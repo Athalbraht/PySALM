@@ -21,7 +21,9 @@ class Responses(DataFrame):
                 {
                     "type" : [],
                     "content" : [],
-                    "mode"  : []
+                    "mode"  : [],
+                    "system-prompt"  : [],
+                    "user-prompt"  : [],
                 }
             )
             obj = Responses(df)

@@ -37,10 +37,11 @@ class Table(TexObject):
 class Section():
     """Create review section."""
 
-    def __init__(self, title, init=False, config=None, head=''):
+    def __init__(self, title, init=False, config=None, head='', depth=0):
         """Create Review instance."""
         self.init = init
         self.head = head
+        self.depth = depth
         self.title = title
         if config:
             self.config = config
@@ -48,25 +49,26 @@ class Section():
         if init:
             self._make_file()
         self.tabulators = self.head.replace('sub', '\t')
-        print("{}- Creating {}section: {}".format(self.tabulators, self.head, title))
-        self.subsections = {}
+        print("{}- Creating {}: {}".format(self.tabulators, self.head, title))
+        self.sections = {}
         self.queue = []
 
-    def add_subsection(self, title, *args, **kwargs):
-        """Create instance of yourself."""
+    def add_section(self, title, *args, **kwargs):
+        """Create instance of yourself and add to dict."""
         new_head = self.head + "sub"
         print("{}\t- {}section {} added".format(self.tabulators, new_head, title))
-        self.subsections[title] = Section(title, head=new_head, config=self.config, *args, **kwargs)
-        return self.subsections[title]
+        self.sections[title] = Section(title, head=new_head, depth=self.depth + 1, config=self.config, *args, **kwargs)
+        return self.sections[title]
 
     def add_description(self, content):
         """Add section or object describtion."""
+        self.queue.append(content)
         print("{}\t\t - description added".format(self.tabulators))
 
     def add_object(self, content, caption=False):
         """Add object with caption."""
+        self.queue.append(content)
         print("{}\t\t - object added".format(self.tabulators))
-        pass
 
     def _config_validator(self):
         if self.init:
@@ -85,9 +87,9 @@ class Section():
             ]
             for rp in replaces:
                 content = content.replace(rp, self.config[rp])
-        with open(self.config['file']+self.config['ext'], 'w') as report:
+        with open(self.config['file'] + self.config['ext'], 'w') as report:
             report.write(content)
 
     def __repr__(self):
         """Make self.sections readable."""
-        return repr(self.subsections)
+        return repr(self.sections)
