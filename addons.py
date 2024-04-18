@@ -5,8 +5,19 @@ from alias import c
 from conf import nominal_data, ordinal_data, quantitative_data, tab_path
 
 
+def write_file(path: str, content: str) -> None:
+    with open(path, 'w') as file:
+        file.write(content)
+
+
+def read_file(path: str) -> str:
+    with open(path, 'r') as file:
+        return file.read()
+
+
 def fm(txt, color='green'):
     return style(txt, fg=color)
+
 
 def cc(name):
     """Convert column name to short alias."""

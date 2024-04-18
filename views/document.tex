@@ -1,7 +1,7 @@
-\documentclass{article}
+\documentclass{%%DOCUMENT_CLASS%%}
 
-\usepackage[polish]{babel}
-\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+\usepackage[%%LANGUAGE%%]{babel}
+\usepackage[letterpaper,top=%%MARIGIN_TOP%%,bottom=%%MARIGIN_BOTTOM%%,left=%%MARIGIN_LEFT%%,right=%%MARIGIN_RIGHT%%,marginparwidth=1.75cm]{geometry}
 
 \usepackage{verbatim} 
 \usepackage{amsmath}
@@ -11,13 +11,13 @@
 \usepackage{cite}
 \usepackage{abstract}
 \usepackage{wrapfig}
-\usepackage{mathrsfs,amsmath} 
+\usepackage{mathrsfs} 
 \usepackage{geometry}
 \usepackage{fancyhdr}
 \usepackage[T1]{fontenc}
-\usepackage[polish]{babel}
+\usepackage[%%LANGUAGE%%]{babel}
 \usepackage[utf8]{inputenc}
-\usepackage{lmodern}
+\usepackage{%%FONT%%}
 \usepackage{listings}
 \usepackage{color}
 \usepackage{xcolor}
@@ -41,6 +41,7 @@
 \newbox\flinebox 
 \newbox\slinebox
 \newbox\mlinebox
+
 
 %\usepackage[firstpage=true]{background}
 \usepackage[]{background}
@@ -89,7 +90,7 @@
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
 \lstset{style=mystyle}
 
-\selectlanguage{polish}
+\selectlanguage{%%LANGUAGE%%}
 
 \newgeometry{rmargin=2.5cm,lmargin=2.5cm,bmargin=2.5cm}
 \pagestyle{fancy}
@@ -105,8 +106,8 @@
 \renewcommand\listfigurename{}
 \renewcommand\listtablename{}
 
-\title{TITLE}
-\author{AUTHOR}
+\title{%%TITLE%%}
+\author{%%AUTHOR%%}
 
 
 \begin{document}
@@ -115,7 +116,7 @@
 \tableofcontents
 \newpage
 
-CONTENT_BLOCK
+%%POSTLOAD%%
 
 \section{Tabele szczegółowe}
 

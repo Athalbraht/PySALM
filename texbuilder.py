@@ -1,14 +1,24 @@
 import os
 import time
+from typing import Protocol
+from addons import read_file, write_file, fm
 
 
-class TexObject():
+class TexObject(Protocol):
     """Tex Objext Interface."""
 
-    def __init__(self):
-        """Desc."""
-        pass
+    def __init__(self, config):
+        self.document : str = config["file_path"]
+        self.preload_alias : str = config['preload_alias']
+        self.payload_alias : str = config["payload_alias"]
+        self.postload_alias : str = config["postload_alias"]
+        self.payload : str = ""
+        self.constants : dict = config["constants"]
+        self.templates : dict = config["templates"]
 
+    def get_payload(self, kind: str) -> str:
+        template = read_file(self.templates[kind])
+        return template.replace(self.payload_alias, )
 
 class Description(TexObject):
     """Description class for tex files."""
@@ -29,7 +39,7 @@ class Graphic(TexObject):
 class Table(TexObject):
     """Table class for tex files."""
 
-    def __init__(self):
+   def __init__(self):
         """Create table object in tex file."""
         pass
 
@@ -37,7 +47,7 @@ class Table(TexObject):
 class Section():
     """Create review section."""
 
-    def __init__(self, title, init=False, config=None, head='', depth=0):
+    def __init__(self, title, init=False, config=None, head="", depth=0):
         """Create Review instance."""
         self.init = init
         self.head = head
@@ -48,43 +58,49 @@ class Section():
             self._config_validator()
         if init:
             self._make_file()
-        self.tabulators = self.head.replace('sub', '\t')
+        self.tabulators = self.head.replace("sub", "\t")
         print("{}- Creating {}: {}".format(self.tabulators, self.head, title))
         self.sections = {}
         self.queue = []
 
+        self.document : str = config["file_path"]
+        self.preload_alias : str = config['preload_alias']
+        self.payload_alias : str = config["payload_alias"]
+        self.postload_alias : str = config["postload_alias"]
+        self.payload : str = ""
+        self.constants : dict = config["constants"]
+        self.templates : dict = config["templates"]
+
     def add_section(self, title, *args, **kwargs):
         """Create instance of yourself and add to dict."""
         new_head = self.head + "sub"
-        # print("{}\t- {}section {} added".format(self.tabulators, new_head, title))
         self.sections[title] = Section(title, head=new_head, depth=self.depth + 1, config=self.config, *args, **kwargs)
         return self.sections[title]
 
-    def add_desc(self, order, *args, **kwargs):
-        """Add section or object describtion."""
-        self.queue.append(order)
-        print("{}\t\t - description added".format(self.tabulators))
-
-    def add_graphic(self, order, caption=False, *args, **kwargs):
-        """Add graphic object with caption."""
-        self.queue.append(order)
-        print("{}\t\t - object added".format(self.tabulators))
-
-    def add_table(self, order, caption=False, *args, **kwargs):
-        """Add table object with caption."""
-        self.queue.append(order)
-        print("{}\t\t - object added".format(self.tabulators))
+    def apply_payloads(self):
+        for command in self.queue():
+            content = read_file(self.document)
+            # Inserting constants
+            for constant, _content in self.constants.items():
+                content = content.replace(constant, _content)
+            content = content.replace(self.postload_alias, "{}\n{}".format(self.preload_alias, command.get_payload()))
+            write_file(self.document, content)
 
     def _config_validator(self):
         if self.init:
-            if os.path.exists(self.config['folder']):
-                self.config['folder'] = self.config['folder'] + "_{}".format(int(time.time()))
-            os.mkdir(self.config['folder'])
-        self.config['abspath'] = os.path.abspath(self.config['folder'])
-        self.config['file'] = os.path.join(self.config['folder'], self.config["filename"])
+            if os.path.exists(self.config["folder"]):
+                self.config["folder"] = self.config["folder"] + "_{}".format(int(time.time()))
+            os.makedirs(self.config["folder"])
+        self.config["folder_path"] = os.path.abspath(self.config["folder"])
+        _file = self.config["filename"] + self.config["ext"]
+        self.config["file"] = _file
+        self.config["file_path"] = os.path.join(self.config["folder_path"], _file)
+        print("- Creating file {} in {}".format(fm(_file, "green"), fm(self.config["folder"])))
+        shutil.copy(self.config['templates']["scheme"], self.config["file_path"])
+
 
     def _make_file(self):
-        with open('views/document.tex', 'r') as file:
+        with open(config["templates"], "r") as file:
             content = file.read()
             replaces = [
                 "AUTHOR",
@@ -92,11 +108,11 @@ class Section():
             ]
             for rp in replaces:
                 content = content.replace(rp, self.config[rp])
-        with open(self.config['file'] + self.config['ext'], 'w') as report:
+        with open(self.config["file"] + self.config["ext"], "w") as report:
             report.write(content)
 
     def build(self, dic, obj):
-        """Build document structure."""
+        """Build recurent document structure."""
         for section, value in dic.items():
             _obj = obj.add_section(section)
             if isinstance(value, dict):

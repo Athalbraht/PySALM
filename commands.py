@@ -11,8 +11,22 @@ class CommandTemplate(Protocol):
         self.loc = loc
         self.calculated : bool = False
 
+    def __repr__(self):
+        return "{}:{}:{}:{}:{}".format(
+            self.id,
+            self.flg,
+            self.kind,
+            self.ctx,
+            self.mode,
+        )
+
+    def get_payload(self):
+        """Return result in tex format"""
+        ...
+
     def execute(self):
-        print("\t\t- Executing")
+        """Execute instructions and save to prepare payload later."""
+        ...
 
     def description(self):
         ...
@@ -23,42 +37,50 @@ class CommandTemplate(Protocol):
     def mode(self):
         ...
 
-    def __repr__(self):
-        return "{}:{}:{}:{}:{}".format(
-            self.id,
-            self.flg,
-            self.kind,
-            self.ctx,
-            self.mode,
-        )
-
 
 class UnsupportedCommand(CommandTemplate):
-    def unsupported(*args, **kwargs):
+    def execute(*args, **kwargs) -> None:
+        print("\t\t- Unsupported command, skipping...")
         raise Warning('Unsupported operation')
+        return None
 
+
+# available mode options
+# - 'random'       # choice randomly from database
+# - 'uniqe'        # always regenerate description
+# - 'global'       # use global setting
+# - 'static'       # AI support disabled, using default values
+# - 'paraphrase'   # paraphrase existing description
 
 class FileCommand(CommandTemplate):
-    def openfile(_file):
-        with open(_file, 'r') as file:
+    def execute(self):
+        content = self.open_file()
+
+    def open_file(self) -> str:
+        with open(self.ctx, 'r') as file:
             return file.read()
 
 
 class StatisticCommand(CommandTemplate):
-    ...
+    def execute(self):
+        ...
 
 
 class TableCommand(CommandTemplate):
-    ...
+    def execute(self):
+        ...
 
 
 class PlotCommand(CommandTemplate):
-    ...
+    def execute(self):
+        ...
 
 
 class AICommand(CommandTemplate):
-    ...
+    def execute(self):
+        ...
 
 
 class QueryCommand(CommandTemplate):
-    ...
+    def execute(self):
+        ...
