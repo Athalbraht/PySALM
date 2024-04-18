@@ -4,6 +4,8 @@ from texbuilder import Section
 from commands import CommandTemplate
 from typing import Callable
 
+from commands import FileCommand, AICommand, PlotCommand, TableCommand, QueryCommand, UnsupportedCommand, StatisticCommand
+
 
 class CommandManager():
     """Loader class."""
@@ -12,6 +14,26 @@ class CommandManager():
         self.commands : list[CommandTemplate] = []
         self.queue : list[CommandTemplate] = []
         self.last_id : int = 0
+        self.mapping = {
+            'file' : {
+                'desc' : FileCommand,
+                'table': FileCommand,
+                'plot': UnsupportedCommand,
+                'stat': UnsupportedCommand,
+            },
+            'gen' : {
+                'desc' : AICommand,
+                'table': TableCommand,
+                'plot': PlotCommand,
+                'stat': StatisticCommand,
+            },
+            'load' : {
+                'desc' : QueryCommand,
+                'table': QueryCommand,
+                'plot': QueryCommand,
+                'stat': QueryCommand,
+            },
+        }
 
     def create_id(self):
         self.last_id += 1
@@ -32,6 +54,9 @@ class CommandManager():
             "mode" : mode,
             "loc" : loc,
         }
+
+        # SET METHOD
+
         command : CommandTemplate = OrderObject(**params)
         self.commands.append(command)
 

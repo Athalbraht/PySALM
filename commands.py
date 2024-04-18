@@ -33,16 +33,32 @@ class CommandTemplate(Protocol):
         )
 
 
-class DescCommand(CommandTemplate):
-    ...
+class UnsupportedCommand(CommandTemplate):
+    def unsupported(*args, **kwargs):
+        raise Warning('Unsupported operation')
 
 
-class ObjectCommand(CommandTemplate):
-    ...
+class FileCommand(CommandTemplate):
+    def openfile(_file):
+        with open(_file, 'r') as file:
+            return file.read()
 
 
 class StatisticCommand(CommandTemplate):
     ...
 
 
-class 
+class TableCommand(CommandTemplate):
+    ...
+
+
+class PlotCommand(CommandTemplate):
+    ...
+
+
+class AICommand(CommandTemplate):
+    ...
+
+
+class QueryCommand(CommandTemplate):
+    ...
