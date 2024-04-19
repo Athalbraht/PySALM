@@ -1,4 +1,8 @@
+import os
 from typing import Protocol
+
+from addons import read_file
+from conf import tex_config
 
 
 class CommandTemplate(Protocol):
@@ -21,7 +25,12 @@ class CommandTemplate(Protocol):
         )
 
     def get_payload(self):
-        """Return result in tex format"""
+        """Return result in tex format."""
+        if self.calculated:
+            return self.payload
+        else:
+            print("\t\t\t- Cannot return payload, not calculated ")
+            return None
         ...
 
     def execute(self):
@@ -54,11 +63,8 @@ class UnsupportedCommand(CommandTemplate):
 
 class FileCommand(CommandTemplate):
     def execute(self):
-        content = self.open_file()
-
-    def open_file(self) -> str:
-        with open(self.ctx, 'r') as file:
-            return file.read()
+        self.calculated = True
+        self.payload = read_file(os.path.join(tex_config['assets_folder'], self.ctx))
 
 
 class StatisticCommand(CommandTemplate):

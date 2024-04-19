@@ -1,10 +1,11 @@
-from addons import fm
-from conf import structure
-from texbuilder import Section
-from commands import CommandTemplate
 from typing import Callable
 
-from commands import FileCommand, AICommand, PlotCommand, TableCommand, QueryCommand, UnsupportedCommand, StatisticCommand
+from addons import fm
+from commands import (AICommand, CommandTemplate, FileCommand, PlotCommand,
+                      QueryCommand, StatisticCommand, TableCommand,
+                      UnsupportedCommand)
+from conf import structure
+from texbuilder import Section
 
 
 class CommandManager():
@@ -57,7 +58,7 @@ class CommandManager():
 
         # SET METHOD
 
-        command : CommandTemplate = OrderObject(**params)
+        command : CommandTemplate = FileCommand(**params)
         self.commands.append(command)
 
     def create_queue(self):
@@ -103,6 +104,10 @@ class Analysis:
     def boost_commands(self):
         self.command_manager.create_queue()
         self.command_manager.execute_queue()
+
+    def build_document(self):
+        print('\t- Applying payloads & building document')
+        self.document.apply_payloads(self.command_manager.commands)
 
     def queue_organizer(self, queue):
         """Organize analysis instruction based on priority of funcions."""
