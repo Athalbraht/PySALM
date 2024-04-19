@@ -4,6 +4,7 @@ import time
 from typing import Protocol, TypeVar
 
 from addons import fm, read_file, write_file
+from commands import CommandTemplate
 
 Section = TypeVar('Section')
 
@@ -52,7 +53,7 @@ class Table(TexObject):
 class Section():
     """Create review section."""
 
-    def __init__(self, title, init=False, config=None, head="", depth=0):
+    def __init__(self, title, init=False, config=None, head="", depth=-1, commands=[]):
         """Create Review instance."""
         self.init = init
         self.head = head
@@ -62,8 +63,9 @@ class Section():
         if init:
             self._config_validator()
         self.tabulators = self.head.replace("sub", "\t")
-        print("{}- Creating {}: {}".format(self.tabulators, self.head, title))
+        print("{}- {}".format(self.tabulators, title))
         self.sections = {}
+        self.commands = []
         self.queue = []
 
         self.document : str = config["file_path"]
@@ -74,34 +76,51 @@ class Section():
         self.constants : dict = config["constants"]
         self.templates : dict = config["templates"]
 
-    def add_section(self, title, *args, **kwargs):
+    def add_section(self, title, commands, *args, **kwargs):
         """Create instance of yourself and add to dict."""
         new_head = self.head + "sub"
-        self.sections[title] = Section(title, head=new_head, depth=self.depth + 1, config=self.config, *args, **kwargs)
+        self.sections[title] = Section(title, head=new_head, commands=commands, depth=self.depth + 1, config=self.config, *args, **kwargs)
         return self.sections[title]
 
-
-    def apply_payloads(self, queue=[]):
+    def apply_payloads(self, queue={}, last_section=''):
         if not queue:
-            queue = self.queue
+            queue = self.sections
+        for section, subsections in queue.items():
+            section_name = "\\{}section{{{}}}\n\n{}\n\quad\n{}".format('sub' * subsections.depth, section,
+                                                                       "%%PRE{}".format(section),
+                                                                       self.postload_alias)
+            self._update_doc(section_name)
+            if len(subsections.sections) > 0:  # isinstance(commands, list):
+                self.apply_payloads(subsections.sections, last_section=section)
+            else:
+                for command in subsections.commands:
+                    self._update_doc(command.get_payload(), kind=command.kind, last_section=last_section)
 
-        for command in queue:
-            if isinstance(command, list):
-                self.apply_payloads(command)
-            else: 
-                content = read_file(self.document)
-                # Inserting constants
-                for constant, _content in self.constants.items():
-                    content = content.replace(constant, _content)
-                print('\t\t- Applying command: {}'.format(command.id))
-                content = content.replace(self.postload_alias, "{}\n{}".format(self.preload_alias, command.get_payload()))
-                write_file(self.document, content)
+    def _update_doc(self, payload: str, kind : str = '', last_section : str = '') -> None:
+        content = read_file(self.document)
+        loc = self.postload_alias
+        # Inserting constants
+        for constant, _content in self.constants.items():
+            content = content.replace(constant, _content)
+        if kind:
+            template = read_file(self.templates[kind])
+            for constant, _content in payload.items():
+                template = template.replace(constant, _content)
+            # payload = "{}\n{}".format(self.preload_alias, template)
+            if payload['%%LOC'] == 'pre':
+                loc = "%%PRE{}".format(last_section)
+            else:
+                template += "\n\n {}".format(self.postload_alias)
+            payload = template
+
+        content = content.replace(loc, payload)
+        write_file(self.document, content)
 
     def _config_validator(self):
         if self.init:
-            if os.path.exists(self.config["folder"]):
-                self.config["folder"] = self.config["folder"] + "_{}".format(int(time.time()))
-            os.makedirs(self.config["folder"])
+            if not os.path.exists(self.config["folder"]):
+                # self.config["folder"] = self.config["folder"] + "_{}".format(int(time.time()))
+                os.makedirs(self.config["folder"])
         self.config["folder_path"] = os.path.abspath(self.config["folder"])
         _file = self.config["filename"] + self.config["ext"]
         self.config["file"] = _file
@@ -112,12 +131,13 @@ class Section():
     def build(self, dic : dict, obj : Section):
         """Build recurrent document structure."""
         for section, value in dic.items():
-            _obj = obj.add_section(section)
+            _obj = obj.add_section(section, value)
             if isinstance(value, dict):
                 self.build(value, _obj)
             else:
-                self.queue.append(value)
+                _obj.commands = value
+                self.queue.append([section, value])
 
     def __repr__(self):
         """Make self.sections readable."""
-        return repr(self.sections)
+        return repr("{} d={}".format(self.sections, self.depth))

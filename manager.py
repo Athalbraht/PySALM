@@ -60,17 +60,13 @@ class CommandManager():
 
         command : CommandTemplate = FileCommand(**params)
         self.commands.append(command)
+        return command
 
     def create_queue(self):
         """Define priority of instructions."""
         print("\t- Sorting instructions list")
-        high = []
-        medium = []
-        low = []
-        for i in self.commands:
-            self.queue.append(i)
-        high.extend(medium)
-        high.extend(low)
+        hierarchy = ['file', 'gen', 'load']
+        self.queue = sorted(self.commands, key=lambda obj: hierarchy.index(obj.flg))
 
     def execute_queue(self):
         print("\t- Executing analysis command")
@@ -79,8 +75,8 @@ class CommandManager():
                 print("\t\t- Executing command: {}: ".format(command.id), end='')
                 command.execute()
             except Exception as e:
-                print(fm("Fail", 'red'))
-                print("\t\t{}".format(e))
+                print(fm("Fail", 'red'), end='')
+                print(" {}".format(e))
             else:
                 print(fm("Pass", 'green'))
 
@@ -99,7 +95,10 @@ class Analysis:
 
     def create_table_of_content(self):
         """Wrap tex build."""
+        print('\t- Creating table of content')
+        print('\t=====================================================')
         self.document.build(self.structure, self.document)
+        print('\t=====================================================')
 
     def boost_commands(self):
         self.command_manager.create_queue()
@@ -107,7 +106,7 @@ class Analysis:
 
     def build_document(self):
         print('\t- Applying payloads & building document')
-        self.document.apply_payloads(self.command_manager.commands)
+        self.document.apply_payloads()#self.command_manager.commands)
 
     def queue_organizer(self, queue):
         """Organize analysis instruction based on priority of funcions."""
