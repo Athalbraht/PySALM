@@ -1,3 +1,5 @@
+from subprocess import check_output
+from ai import Responses
 from typing import Callable
 
 from addons import fm
@@ -11,10 +13,11 @@ from texbuilder import Section
 class CommandManager():
     """Loader class."""
 
-    def __init__(self):
+    def __init__(self, responses: Responses):
         self.commands : list[CommandTemplate] = []
         self.queue : list[CommandTemplate] = []
         self.last_id : int = 0
+        self.responses = responses
         self.mapping = {
             'file' : {
                 'desc' : FileCommand,
@@ -54,6 +57,7 @@ class CommandManager():
             "ctx" : ctx,
             "mode" : mode,
             "loc" : loc,
+            "responses" : self.responses,
         }
 
         # SET METHOD
@@ -84,11 +88,13 @@ class CommandManager():
 class Analysis:
     """Session analysis builder."""
 
-    def __init__(self, tex_config: dict):
+    def __init__(self, tex_config: dict, compile: bool = False, doc_type: str = "latex"):
         """Session manager for analysis session."""
         self.structure : Callable
-        self.command_manager : CommandManager = CommandManager()
+        self.responses : Responses = Responses.init(tex_config['responses_file'])
+        self.command_manager : CommandManager = CommandManager(self.responses)
         self.document : Section = Section("Report", config=tex_config, init=True)
+        self.compile = compile
 
     def register_commands(self):
         self.structure = structure(self.command_manager)
@@ -106,7 +112,23 @@ class Analysis:
 
     def build_document(self):
         print('\t- Applying payloads & building document')
-        self.document.apply_payloads()#self.command_manager.commands)
+        self.document.apply_payloads()  # self.command_manager.commands)
 
     def queue_organizer(self, queue):
         """Organize analysis instruction based on priority of funcions."""
+
+    def compile(self):
+        try:
+            pass
+            # compile_config = self.config["compile"]
+            # command = "{} {} {}".format(
+            #     compile_config['executable'],
+            #     compile_config['options'],
+            #      FIX self.config['']
+            #      add abs_path in config file regardless to Section class
+
+            # )
+            # print("- Compiling {} document ".format(compile_config["method"]))
+        except Exception as e:
+            print(fm("Fail", 'red'))
+            print(e)

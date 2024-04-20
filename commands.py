@@ -1,12 +1,13 @@
 import os
 from typing import Protocol
+from ai import Responses
 
 from addons import read_file, fm
 from conf import tex_config
 
 
 class CommandTemplate(Protocol):
-    def __init__(self, id: int, flg: str, kind: str, ctx: str, mode: str, loc: str):
+    def __init__(self, id: int, flg: str, kind: str, ctx: str, mode: str, loc: str, responses : Responses):
         self.id = id
         self.flg = flg
         self.kind = kind
@@ -22,6 +23,7 @@ class CommandTemplate(Protocol):
             "%%PREFRAME%%" : "",
             "%%POSTFRAME%%" : "",
         }
+        self.responces = responses
 
     def __repr__(self):
         return "{}:{}:{}:{}:{}".format(
@@ -59,15 +61,6 @@ class CommandTemplate(Protocol):
         """
         ...
 
-    def description(self):
-        ...
-
-    def add_func_reference(self):
-        ...
-
-    def mode(self):
-        ...
-
 
 class UnsupportedCommand(CommandTemplate):
     def execute(*args, **kwargs) -> None:
@@ -83,11 +76,30 @@ class UnsupportedCommand(CommandTemplate):
 # - "static"       # AI support disabled, using default values
 # - "paraphrase"   # paraphrase existing description
 
+class GenCommand():
+    def execute(self):
+        ...
+
+    def get_context(self):
+        ...
+
+    def get_prompt(self):
+        ...
+
+    def evaluate_prompt(self):
+        ...
+
+
 class FileCommand(CommandTemplate):
     def execute(self):
         payload = read_file(os.path.join(tex_config["assets_folder"], self.ctx))
         self.calculated = True
         self.payload[tex_config["payload_alias"]] = payload
+
+
+class QueryCommand(CommandTemplate):
+    def execute(self):
+        ...
 
 
 class StatisticCommand(CommandTemplate):
@@ -106,10 +118,5 @@ class PlotCommand(CommandTemplate):
 
 
 class AICommand(CommandTemplate):
-    def execute(self):
-        ...
-
-
-class QueryCommand(CommandTemplate):
     def execute(self):
         ...

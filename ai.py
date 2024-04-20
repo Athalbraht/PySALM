@@ -1,3 +1,4 @@
+import os
 from openai import OpenAI
 from pandas import DataFrame, read_csv
 
@@ -28,8 +29,12 @@ class Responses(DataFrame):
             )
             obj = Responses(df)
             obj.to_csv(templates_path)
+
+        templates_path = os.path.abspath(templates_path)
         obj.templates_path = templates_path
         return obj
+
+  
 
     def save(self):
         """Save temlates to file."""
