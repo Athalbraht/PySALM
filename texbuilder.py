@@ -6,7 +6,7 @@ from typing import Protocol, TypeVar
 from addons import fm, read_file, write_file
 from commands import CommandTemplate
 
-Section = TypeVar('Section')
+TeXbuilder = TypeVar('TeXbuilder')
 
 
 class TexObject(Protocol):
@@ -50,7 +50,7 @@ class Table(TexObject):
         pass
 
 
-class Section():
+class TeXbuilder():
     """Create review section."""
 
     def __init__(self, title, init=False, config=None, head="", depth=-1, commands=[]):
@@ -79,7 +79,7 @@ class Section():
     def add_section(self, title, commands, *args, **kwargs):
         """Create instance of yourself and add to dict."""
         new_head = self.head + "sub"
-        self.sections[title] = Section(title, head=new_head, commands=commands, depth=self.depth + 1, config=self.config, *args, **kwargs)
+        self.sections[title] = TeXbuilder(title, head=new_head, commands=commands, depth=self.depth + 1, config=self.config, *args, **kwargs)
         return self.sections[title]
 
     def apply_payloads(self, queue={}, last_section=''):
@@ -128,7 +128,7 @@ class Section():
         print("- Creating file {} in {}".format(fm(_file, "green"), fm(self.config["folder"])))
         shutil.copy(self.config['templates']["scheme"], self.config["file_path"])
 
-    def build(self, dic : dict, obj : Section):
+    def build(self, dic : dict, obj : TeXbuilder):
         """Build recurrent document structure."""
         for section, value in dic.items():
             _obj = obj.add_section(section, value)

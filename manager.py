@@ -7,7 +7,7 @@ from commands import (AICommand, CommandTemplate, FileCommand, PlotCommand,
                       QueryCommand, StatisticCommand, TableCommand,
                       UnsupportedCommand)
 from conf import structure
-from texbuilder import Section
+from texbuilder import TeXbuilder
 
 
 class CommandManager():
@@ -93,7 +93,7 @@ class Analysis:
         self.structure : Callable
         self.responses : Responses = Responses.init(tex_config['responses_file'])
         self.command_manager : CommandManager = CommandManager(self.responses)
-        self.document : Section = Section("Report", config=tex_config, init=True)
+        self.document : TeXbuilder = TeXbuilder("Report", config=tex_config, init=True)
         self.compile = compile
 
     def register_commands(self):
@@ -125,7 +125,7 @@ class Analysis:
             #     compile_config['executable'],
             #     compile_config['options'],
             #      FIX self.config['']
-            #      add abs_path in config file regardless to Section class
+            #      add abs_path in config file regardless to TeXbuilder class
 
             # )
             # print("- Compiling {} document ".format(compile_config["method"]))
