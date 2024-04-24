@@ -4,3 +4,4 @@
 *.env*
 report
 data
+venv/
