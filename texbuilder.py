@@ -8,48 +8,6 @@ from commands import CommandTemplate
 
 TeXbuilder = TypeVar('TeXbuilder')
 
-
-class TexObject(Protocol):
-    """Tex Objext Interface."""
-
-    def __init__(self, config):
-        self.document : str = config["file_path"]
-        self.preload_alias : str = config['preload_alias']
-        self.payload_alias : str = config["payload_alias"]
-        self.postload_alias : str = config["postload_alias"]
-        self.payload : str = ""
-        self.constants : dict = config["constants"]
-        self.templates : dict = config["templates"]
-
-    def get_payload(self, kind: str) -> str:
-        template = read_file(self.templates[kind])
-        return template.replace(self.payload_alias, )
-
-
-class Description(TexObject):
-    """Description class for tex files."""
-
-    def __init__(self):
-        """Create description area in tex file."""
-        pass
-
-
-class Graphic(TexObject):
-    """Graphic class for tex files."""
-
-    def __init__(self):
-        """Create graphic object in tex file."""
-        pass
-
-
-class Table(TexObject):
-    """Table class for tex files."""
-
-    def __init__(self):
-        """Create graphic object in tex file."""
-        pass
-
-
 class TeXbuilder():
     """Create review section."""
 
