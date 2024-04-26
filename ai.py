@@ -20,12 +20,16 @@ class Responses(DataFrame):
             print("\t- cannot load file, creating new one")
             df = DataFrame(
                 {
-                    "type" : [],
-                    "content" : [],
-                    "mode"  : [],
-                    "system-prompt"  : [],
-                    "user-prompt"  : [],
-                }
+                    "alias" : [],
+                    "prompt" : [],
+                    "output" : [],
+                    # "type" : [],
+                    # "content" : [],
+                    # "mode"  : [],
+                    # "system-prompt"  : [],
+                    # "user-prompt"  : [],
+                },
+                dtype=str,
             )
             obj = Responses(df)
             obj.to_csv(templates_path)
@@ -34,7 +38,26 @@ class Responses(DataFrame):
         obj.templates_path = templates_path
         return obj
 
-  
+    def find_index(self, alias):
+        try:
+            idx = self[self['alias'] == alias].index[-1]
+        except:
+            self.loc[len(self) + 1] = [alias, '', '']
+            idx = self[self['alias'] == alias].index[-1]
+        finally:
+            return idx
+
+    def update_prompt(self, alias, prompt):
+        self.loc[self.find_index(alias), 'prompt'] += prompt
+        self.save()
+
+    def update_response(self, alias, msg):
+        self.loc[self.find_index(alias), 'output'] = msg
+        self.save()
+
+    def get_response(self,alias):
+        return self.loc[self.find_index(alias), 'output'] 
+
 
     def save(self):
         """Save temlates to file."""

@@ -60,7 +60,7 @@ class CommandManager():
             "responses" : self.responses,
         }
 
-        # SET METHOD
+        # SET METHOD TODO
 
         command : CommandTemplate = FileCommand(**params)
         self.commands.append(command)
