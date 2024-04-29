@@ -56,6 +56,7 @@ class TeXbuilder():
 
     def _update_doc(self, payload: str, kind : str = '', last_section : str = '') -> None:
         content = read_file(self.document)
+        temp = '' # if loc= pre, add new prealias at the end of template
         loc = self.postload_alias
         # Inserting constants
         for constant, _content in self.constants.items():
@@ -67,11 +68,12 @@ class TeXbuilder():
             # payload = "{}\n{}".format(self.preload_alias, template)
             if payload['%%LOC'] == 'pre':
                 loc = "%%PRE{}".format(last_section)
+                temp = loc
             else:
                 template += "\n\n {}".format(self.postload_alias)
             payload = template
 
-        content = content.replace(loc, payload)
+        content = content.replace(loc, payload + "\n{}".format(temp))
         write_file(self.document, content)
 
     def _config_validator(self):

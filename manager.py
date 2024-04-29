@@ -1,3 +1,4 @@
+from pandas import DataFrame
 from subprocess import check_output
 from ai import Responses
 from typing import Callable
@@ -13,7 +14,8 @@ from texbuilder import TeXbuilder
 class CommandManager():
     """Loader class."""
 
-    def __init__(self, responses: Responses):
+    def __init__(self, responses: Responses, data : DataFrame):
+        self.df = data
         self.commands : list[CommandTemplate] = []
         self.queue : list[CommandTemplate] = []
         self.last_id : int = 0
@@ -43,13 +45,14 @@ class CommandManager():
         self.last_id += 1
         return self.last_id
 
-    def register(self, flg: str, kind: str, ctx: str, mode: str = 'static', loc: str = 'inline', *args, **kwargs) -> None:
+    def register(self, flg: str, kind: str, ctx: str, mode: str = 'static', loc: str = 'inline', alias='Noname', *args, **kwargs) -> None:
         print("\t- Registering {} as {} for {} in {} mode".format(
             fm(kind),
             fm(flg, 'yellow'),
             fm(ctx, 'cyan'),
             fm(mode, 'red')))
         orderID = self.create_id()
+        # runtime_data =   TODO
         params = {
             "id" : orderID,
             "flg" : flg,
@@ -57,6 +60,7 @@ class CommandManager():
             "ctx" : ctx,
             "mode" : mode,
             "loc" : loc,
+            "alias" : alias,
             "responses" : self.responses,
         }
 
@@ -88,11 +92,12 @@ class CommandManager():
 class Analysis:
     """Session analysis builder."""
 
-    def __init__(self, tex_config: dict, compile: bool = False, doc_type: str = "latex"):
+    def __init__(self, tex_config: dict, data : DataFrame, compile: bool = False, doc_type: str = "latex"):
         """Session manager for analysis session."""
         self.structure : Callable
         self.responses : Responses = Responses.init(tex_config['responses_file'])
-        self.command_manager : CommandManager = CommandManager(self.responses)
+        self.df = data
+        self.command_manager : CommandManager = CommandManager(self.responses, self.df)
         self.document : TeXbuilder = TeXbuilder("Report", config=tex_config, init=True)
         self.compile = compile
 

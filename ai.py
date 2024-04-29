@@ -55,9 +55,8 @@ class Responses(DataFrame):
         self.loc[self.find_index(alias), 'output'] = msg
         self.save()
 
-    def get_response(self,alias):
-        return self.loc[self.find_index(alias), 'output'] 
-
+    def get_response(self, alias):
+        return self.loc[self.find_index(alias), 'output']
 
     def save(self):
         """Save temlates to file."""

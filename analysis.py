@@ -1,8 +1,10 @@
-from conf import tex_config
+from conf import tex_config, data_loader
+from sys import argv
 from manager import Analysis
 
 if __name__ == "__main__":
-    analysis = Analysis(tex_config, compile=True)
+    df = data_loader(argv[1])
+    analysis = Analysis(tex_config, compile=True, data=df)
     analysis.register_commands()
     analysis.create_table_of_content()
     analysis.boost_commands()

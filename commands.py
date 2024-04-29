@@ -7,13 +7,14 @@ from conf import tex_config
 
 
 class CommandTemplate(Protocol):
-    def __init__(self, id: int, flg: str, kind: str, ctx: str, mode: str, loc: str, responses : Responses):
+    def __init__(self, id: int, flg: str, kind: str, ctx: str, mode: str, loc: str, responses : Responses, alias : str):
         self.id = id
         self.flg = flg
         self.kind = kind
         self.ctx = ctx
         self.mode = mode
         self.loc = loc
+        self.alias = alias
         self.calculated : bool = False
         self.payload : dict = {
             "%%LOC" : self.loc,
@@ -23,7 +24,7 @@ class CommandTemplate(Protocol):
             "%%PREFRAME%%" : "",
             "%%POSTFRAME%%" : "",
         }
-        self.responces = responses
+        self.responces : Responses = responses
 
     def __repr__(self):
         return "{}:{}:{}:{}:{}".format(
@@ -61,6 +62,10 @@ class CommandTemplate(Protocol):
         """
         ...
 
+    def db_push(self, content : str):
+        """Save paylod as csv entry."""
+        self.responses.update_prompt(self.alias, content)
+
 
 class UnsupportedCommand(CommandTemplate):
     def execute(*args, **kwargs) -> None:
@@ -75,6 +80,9 @@ class UnsupportedCommand(CommandTemplate):
 # - "global"       # use global setting
 # - "static"       # AI support disabled, using default values
 # - "paraphrase"   # paraphrase existing description
+
+# example of reg command usage:
+# register('gen', 'table', loc='pre', mode='global')
 
 class GenCommand():
     def execute(self):
