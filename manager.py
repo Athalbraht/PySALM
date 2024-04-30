@@ -5,9 +5,10 @@ from pandas import DataFrame
 from subprocess import check_output
 from ai import Responses
 from typing import Callable
+from stats import get_power
 
 from addons import fm
-from commands import (CommandTemplate, FileCommand, DescTableCommand, DescCommand, CustomCommand, CountTableCommand, CrossTableCommand,ExpandTableCommand,
+from commands import (CommandTemplate, FileCommand, DescTableCommand, DescCommand, CustomCommand, CountTableCommand, CrossTableCommand, ExpandTableCommand, PowerTableCommand, PowerPlotCommand,
                       PlotCommand, AICommand,
                       QueryCommand, StatisticCommand,
                       UnsupportedCommand)
@@ -21,6 +22,7 @@ class CommandManager():
     def __init__(self, responses: Responses, data : DataFrame, ai):
         self.df = data
         self.ai = ai
+        _, self.powers = get_power()
         self.commands : list[CommandTemplate] = []
         self.queue : list[CommandTemplate] = []
         self.last_id : int = 0
@@ -34,11 +36,13 @@ class CommandManager():
             },
             'gen' : {
                 'desc' : DescCommand,
+                'powertable': PowerTableCommand,
                 'desctable': DescTableCommand,
                 'counttable': CountTableCommand,
                 'crosstable': CrossTableCommand,
                 'expandtable': ExpandTableCommand,
                 'plot': PlotCommand,
+                'powerplot': PowerPlotCommand,
                 'stat': StatisticCommand,
             },
             'load' : {
@@ -59,7 +63,7 @@ class CommandManager():
         self.last_id += 1
         return self.last_id
 
-    def register(self, flg: str, kind: str, ctx: str, silent = False, mode: str = 'static', paraphrase: bool = False, loc: str = 'inline', alias='NoName', *args, **kwargs) -> None:
+    def register(self, flg: str, kind: str, ctx: str, silent=False, mode: str = 'static', paraphrase: bool = False, loc: str = 'inline', alias='NoName', *args, **kwargs) -> None:
         print("\t- Registering {} as {} for {} in {} mode p{}".format(
             fm(kind),
             fm(flg, 'yellow'),
@@ -81,6 +85,7 @@ class CommandManager():
             'kwargs' : kwargs,
             'silent' : silent,
             "paraphrase" : paraphrase,
+            "powers" : self.powers,
             "data" : self.df,
             "responses" : self.responses,
         }
@@ -116,7 +121,7 @@ class Analysis:
     def __init__(self, tex_config: dict, data : DataFrame, doc_type: str = "latex"):
         """Session manager for analysis session."""
         self.structure : Callable
-        self.ai =  AI()
+        self.ai = AI()
         self.responses : Responses = Responses.init(tex_config['responses_file'])
         self.df = data
         self.command_manager : CommandManager = CommandManager(self.responses, self.df, self.ai)

@@ -5,6 +5,39 @@ from click import style
 from addons import type_detector
 from conf import pic_ext, sns, sns_api, tex_config
 
+import statsmodels.stats.power as smp
+import numpy as np
+from pandas import DataFrame
+
+
+def plot_power(cat=10, effect_size=[0.5, 0.99], a=0.05, lx=30, max_p=0.8, alias='chipower'):
+    df = DataFrame({
+        'Liczba kategorii' : [],
+        'Siła efektu' : [],
+        'Moc testu' : [],
+        'Wielkość próby' : [],
+        'Alfa' : [],
+    })
+    for c in range(1, cat):
+        for e in np.linspace(effect_size[0], effect_size[1], 10):
+            for xx in range(1, lx):
+                df.loc[len(df) + 1] = [c, e, smp.GofChisquarePower().solve_power(effect_size=e, nobs=xx, alpha=a, n_bins=c), xx, a]
+    df.dropna(inplace=True)
+    df['Wielkość próby'] = df['Wielkość próby'].astype(int)
+    df['Liczba kategorii'] = df['Liczba kategorii'].astype(int)
+
+    g = sns.relplot(data=df, x='Wielkość próby', y="Moc testu", kind='line', hue='Liczba kategorii')
+    g.axes[0][0].axhline(max_p, df['Wielkość próby'].min(), df['Wielkość próby'].max(), alpha=0.3, linestyle='--', c='black')
+    c = df[(df['Moc testu'] > 0.79) & (df['Moc testu'] < 0.81)].groupby('Liczba kategorii').mean().astype(int)['Wielkość próby']
+    for cc in c.index:
+        g.axes[0][0].axvline(c[cc], 0, 1, alpha=0.3, linestyle='--', c='black')
+    filename = alias + pic_ext
+    path = os.path.join(tex_config['folder'], 'pics', filename)
+    plt.savefig(path)
+    # caption = "Minimalna wielkość próby dla ustalonej mocy testu (czarne linie) o ustalonel licznie kategorii. Rozmycie zawiera siłę efektu > 0.7"
+    caption = "Wykres przedstawia minimalną wielkość próby dla testu o mocy powyżej 0.8 dla różnych ilości kategorii (stopni swobody). W kolorowym tle zawierają się siły efektu powyżej 0.7"
+    return path, " ", caption
+
 
 def plot(data, pset, alias, labels=[False, False], **conf):
     """Auto print graphs."""

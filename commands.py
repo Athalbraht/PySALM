@@ -5,11 +5,11 @@ from ai import Responses
 from addons import read_file, fm
 from conf import tex_config
 import tables
-from plotting import plot
+from plotting import plot, plot_power
 
 
 class CommandTemplate(Protocol):
-    def __init__(self, ai, id: int, flg: str, kind: str, ctx: str, silent: bool, mode: str, loc: str, paraphrase : bool, data, responses : Responses, kwargs, alias : str = 'NoName'):
+    def __init__(self, ai, powers, id: int, flg: str, kind: str, ctx: str, silent: bool, mode: str, loc: str, paraphrase : bool, data, responses : Responses, kwargs, alias : str = 'NoName'):
         self.id = id
         self.ai = ai
         self.df = data
@@ -18,6 +18,7 @@ class CommandTemplate(Protocol):
         self.kind = kind
         self.silent = silent
         self.ctx = ctx
+        self.powers = powers
         self.mode = mode
         self.loc = loc
         self.additional_config = kwargs
@@ -149,6 +150,14 @@ class FileCommand(CommandTemplate):
         self.apply_payload(payload)
 
 
+class PowerTableCommand(CommandTemplate):
+    def execute(self):
+        table, desc = tables.powertable(self.powers)
+        self.calculated = True
+        self.responses.update_desc(self.alias, desc)
+        self.apply_payload(table)
+
+
 class DescTableCommand(CommandTemplate):
     def execute(self):
         table, desc = tables.desctable(self.df[self.ctx])
@@ -186,6 +195,17 @@ class DescCommand(CommandTemplate):
         desc = self.responses.get_desc(self.ctx)
         self.calculated = True
         self.apply_payload(desc)
+
+
+class PowerPlotCommand(CommandTemplate):
+    def execute(self):
+        path, desc, caption = plot_power()
+        self.calculated = True
+        self.responses.update_desc(self.alias, desc)
+        self.payload["%%CAPTION%%"] = caption
+        self.payload["%%SCALE%%"] = "1"
+        path = '/'.join(path.split('/')[-2::])
+        self.payload[tex_config["payload_alias"]] = path
 
 
 class PlotCommand(CommandTemplate):

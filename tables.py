@@ -20,22 +20,23 @@ def desctable(data):
     return content, prompt
 
 
-def crosstab(data, name, col, crosstabs=[], aliases=[]):
+def powertable(powertab):
+    content = fix_desc(powertab.to_latex(
+        caption="Minimalna wielkość próby dla testu statystycznego o określonych stopniach swobody (kategorii).", position='h!'))
+    prompt = "Tabela przedstawia minimalną wielkość próby dla testu o mocy powyżej 0.8 dla różnych ilości kategorii (stopni swobody)."
+    return content, prompt
+
+
+def crosstab(data, col):
     """Generate list of count table for specific entry and crosstables if crosstab specified."""
-    tables = []
-    tab1 = data[col].value_counts()
-    tab2 = (data[col].value_counts(normalize=True) * 100).round(2)
-    tab = pd.concat([tab1, tab2], axis=1).sort_index()
+    if isinstance(col, list):
+        pass
+    else:
+        tab = (pd.crosstab(data[col], data[col], margins=True, normalize=True) * 100).round(1)
     tables.append(tab)
-    tab = tab.astype(str)
-    content = fix_desc(tab.to_latex(
-        caption="Zestawienie ilościowe wartości w kolumnie {}".format(col), position='h!'))
-    for i, crosstab in enumerate(crosstabs):
-        tab = (pd.crosstab(data[col], data[crosstab], margins=False, normalize=True) * 100).round(1)
-        tables.append(tab)
-        tab = (tab.astype(str) + "%").to_latex(
-            caption="Tabela krzyżowa zależności {} między {}".format(col, crosstab), label="crosstab:{}-{}"
-            .format(name, aliases[i]), position="h!")
+    tab = (tab.astype(str) + "%").to_latex(
+        caption="Tabela krzyżowa zależności {} między {}".format(col, crosstab), label="crosstab:{}-{}"
+        .format(name, aliases[i]), position="h!")
     return content
 
 
