@@ -1,4 +1,5 @@
 import os
+from ai import AI
 import shutil
 from pandas import DataFrame
 from subprocess import check_output
@@ -6,7 +7,7 @@ from ai import Responses
 from typing import Callable
 
 from addons import fm
-from commands import (CommandTemplate, FileCommand, DescTableCommand, DescCommand, CustomCommand,
+from commands import (CommandTemplate, FileCommand, DescTableCommand, DescCommand, CustomCommand, CountTableCommand, CrossTableCommand,ExpandTableCommand,
                       PlotCommand, AICommand,
                       QueryCommand, StatisticCommand,
                       UnsupportedCommand)
@@ -17,8 +18,9 @@ from texbuilder import TeXbuilder
 class CommandManager():
     """Loader class."""
 
-    def __init__(self, responses: Responses, data : DataFrame):
+    def __init__(self, responses: Responses, data : DataFrame, ai):
         self.df = data
+        self.ai = ai
         self.commands : list[CommandTemplate] = []
         self.queue : list[CommandTemplate] = []
         self.last_id : int = 0
@@ -33,6 +35,9 @@ class CommandManager():
             'gen' : {
                 'desc' : DescCommand,
                 'desctable': DescTableCommand,
+                'counttable': CountTableCommand,
+                'crosstable': CrossTableCommand,
+                'expandtable': ExpandTableCommand,
                 'plot': PlotCommand,
                 'stat': StatisticCommand,
             },
@@ -54,7 +59,7 @@ class CommandManager():
         self.last_id += 1
         return self.last_id
 
-    def register(self, flg: str, kind: str, ctx: str, mode: str = 'static', paraphrase: bool = False, loc: str = 'inline', alias='NoName', *args, **kwargs) -> None:
+    def register(self, flg: str, kind: str, ctx: str, silent = False, mode: str = 'static', paraphrase: bool = False, loc: str = 'inline', alias='NoName', *args, **kwargs) -> None:
         print("\t- Registering {} as {} for {} in {} mode p{}".format(
             fm(kind),
             fm(flg, 'yellow'),
@@ -68,10 +73,13 @@ class CommandManager():
             "id" : orderID,
             "flg" : flg,
             "kind" : kind,
+            "ai" : self.ai,
             "ctx" : ctx,
             "mode" : mode,
             "loc" : loc,
             "alias" : alias,
+            'kwargs' : kwargs,
+            'silent' : silent,
             "paraphrase" : paraphrase,
             "data" : self.df,
             "responses" : self.responses,
@@ -108,10 +116,22 @@ class Analysis:
     def __init__(self, tex_config: dict, data : DataFrame, doc_type: str = "latex"):
         """Session manager for analysis session."""
         self.structure : Callable
+        self.ai =  AI()
         self.responses : Responses = Responses.init(tex_config['responses_file'])
         self.df = data
-        self.command_manager : CommandManager = CommandManager(self.responses, self.df)
+        self.command_manager : CommandManager = CommandManager(self.responses, self.df, self.ai)
         self.document : TeXbuilder = TeXbuilder("Report", config=tex_config, init=True)
+        self.create_folders()
+
+    def create_folders(self):
+        print("- Creating folders..")
+        print("\t- picture folder", end='')
+        try:
+            os.mkdir(os.path.join(tex_config['folder'], 'pics'))
+        except Exception as e:
+            print("folder exists, {}".format(fm('skip', 'red')))
+        else:
+            print(fm('Done'))
 
     def register_commands(self):
         self.structure = structure(self.command_manager)

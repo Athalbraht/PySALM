@@ -5,18 +5,22 @@ from ai import Responses
 from addons import read_file, fm
 from conf import tex_config
 import tables
+from plotting import plot
 
 
 class CommandTemplate(Protocol):
-    def __init__(self, id: int, flg: str, kind: str, ctx: str, mode: str, loc: str, paraphrase : bool, data, responses : Responses, alias : str = 'NoName'):
+    def __init__(self, ai, id: int, flg: str, kind: str, ctx: str, silent: bool, mode: str, loc: str, paraphrase : bool, data, responses : Responses, kwargs, alias : str = 'NoName'):
         self.id = id
+        self.ai = ai
         self.df = data
         self.paraphrase = paraphrase
         self.flg = flg
         self.kind = kind
+        self.silent = silent
         self.ctx = ctx
         self.mode = mode
         self.loc = loc
+        self.additional_config = kwargs
         if alias == "NoName":
             self.alias = ctx
         else:
@@ -44,7 +48,7 @@ class CommandTemplate(Protocol):
 
     def get_payload(self):
         """Return result in tex format."""
-        print("\t\t\t- Getting payload: {}: ".format(self.id), end="")
+        print("\t\t\t- Getting payload: {}: ".format(self.ctx), end="")
         try:
             if self.calculated:
                 print(fm("Pass", "green"))
@@ -101,6 +105,11 @@ class CommandTemplate(Protocol):
             self.update_response(payload)
             self.payload[tex_config["payload_alias"]] = payload
 
+        if self.silent:
+            self.payload[tex_config["payload_alias"]] = ""
+            self.mode = 'desc'
+            self.flg = 'gendesc'
+
 
 class UnsupportedCommand(CommandTemplate):
     def execute(*args, **kwargs) -> None:
@@ -148,11 +157,46 @@ class DescTableCommand(CommandTemplate):
         self.apply_payload(table)
 
 
+class ExpandTableCommand(CommandTemplate):
+    def execute(self):
+        table, desc = tables.expandtable(self.df, self.ctx)
+        self.calculated = True
+        self.responses.update_desc(self.alias, desc)
+        self.apply_payload(table)
+
+
+class CountTableCommand(CommandTemplate):
+    def execute(self):
+        table, desc = tables.counttable(self.df, self.ctx)
+        self.calculated = True
+        self.responses.update_desc(self.alias, desc)
+        self.apply_payload(table)
+
+
+class CrossTableCommand(CommandTemplate):
+    def execute(self):
+        table, desc = tables.desctable(self.df[self.ctx])
+        self.calculated = True
+        self.responses.update_desc(self.alias, desc)
+        self.apply_payload(table)
+
+
 class DescCommand(CommandTemplate):
     def execute(self):
         desc = self.responses.get_desc(self.ctx)
         self.calculated = True
         self.apply_payload(desc)
+
+
+class PlotCommand(CommandTemplate):
+    def execute(self):
+        path, desc, caption = plot(self.df, self.ctx, alias=self.alias, **self.additional_config.get('plot', {}))
+        self.calculated = True
+        self.responses.update_desc(self.alias, desc)
+        self.payload["%%CAPTION%%"] = caption
+        self.payload["%%SCALE%%"] = "1"
+        path = '/'.join(path.split('/')[-2::])
+        self.payload[tex_config["payload_alias"]] = path
 
 
 class CustomCommand(CommandTemplate):
@@ -167,11 +211,6 @@ class QueryCommand(CommandTemplate):
 
 
 class StatisticCommand(CommandTemplate):
-    def execute(self):
-        ...
-
-
-class PlotCommand(CommandTemplate):
     def execute(self):
         ...
 

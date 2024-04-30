@@ -1,6 +1,7 @@
 import os
 from openai import OpenAI
 from pandas import DataFrame, read_csv
+from conf import tex_config
 
 
 class Responses(DataFrame):
@@ -90,30 +91,34 @@ class AI():
         """Client init."""
         self.client = OpenAI()
         self.config = config
-        self.model = config['AImodel'],
-        self.research_context = self.load_context()
-        self.responses = Responses(config['templates.csv'])
+        #self.research_context = self.load_context()
+        #self.responses = Responses(config['templates.csv'])
 
     def make_it_free(self):
         """Disable online requests, keep prompt locally and ask manually :D."""
         pass
 
-    def request(self):
+    def request(self, msg):
         """Make API request."""
-        completion = self.client.chat.completions.create(
-            model=self.model,
+        self.completion = self.client.chat.completions.create(
+            model=tex_config['ai']['model'],
             messages=[
                 {
                     "role" : "system",
-                    "content" : ""
+                    "content" : tex_config['ai']['system']
                 },
                 {
                     "role" : "user",
-                    "content" : ""
+                    "content" : msg,
                 }
             ]
         )
-        return completion.choices[0].message
+        msg = self.completion.choices[0].message.content
+        print(msg)
+        _ = input('click to continue')
+        return msg
+
+
 
     def generate_abstract(self):
         """Generate abstract based on summary."""
