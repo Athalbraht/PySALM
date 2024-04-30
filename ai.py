@@ -25,6 +25,7 @@ class Responses(DataFrame):
                     "stack" : [],
                     "paraphrased" : [],
                     "output" : [],
+                    "description" : [],
                     # "type" : [],
                     # "content" : [],
                     # "mode"  : [],
@@ -44,12 +45,12 @@ class Responses(DataFrame):
         try:
             idx = self[self['alias'] == alias].index[-1]
         except:
-            self.loc[len(self) + 1] = [alias, ' ', ' ', False , ' ']
+            self.loc[len(self) + 1] = [alias, ' ', ' ', False , ' ', " "]
             idx = self[self['alias'] == alias].index[-1]
         finally:
             return idx
 
-    def paraphrased(self, alias, _set = False) -> bool:
+    def paraphrased(self, alias, _set=False) -> bool:
         if _set:
             self.loc[self.find_index(alias), 'paraphrased'] = True
         return self.loc[self.find_index(alias), 'paraphrased']
@@ -62,6 +63,10 @@ class Responses(DataFrame):
         self.loc[self.find_index(alias), 'stack'] += prompt
         self.save()
 
+    def update_desc(self, alias, msg):
+        self.loc[self.find_index(alias), 'description'] = msg
+        self.save()
+
     def update_response(self, alias, msg):
         self.loc[self.find_index(alias), 'output'] = msg
         self.save()
@@ -69,9 +74,12 @@ class Responses(DataFrame):
     def get_response(self, alias):
         return self.loc[self.find_index(alias), 'output']
 
+    def get_desc(self, alias):
+        return self.loc[self.find_index(alias), 'description']
+
     def save(self):
         """Save temlates to file."""
-        print("\t- saving templates to {}".format(self.templates_path))
+        # print("\t- saving templates to {}".format(self.templates_path))
         self.to_csv(self.templates_path, index=False)
 
 

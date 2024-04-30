@@ -2,6 +2,22 @@ import pandas as pd
 
 from addons import fix_desc
 from conf import tab_path
+from scipy.stats import shapiro
+
+
+def desctable(data):
+    tab = data.describe().round(1).astype(str)
+    col = tab.columns
+    shapiro_col = {}
+    for c in col:
+        shapiro_col[c] = str(round(shapiro(data[c])[1], 3))
+    shapiro_df = pd.DataFrame(shapiro_col, index=(['$\\rho$']))
+    tab = pd.concat([tab, shapiro_df]).transpose()
+    content = fix_desc(tab.to_latex(
+        caption="Statystyki opisowe danych metrycznych, $\overline{x}$ - średnia, $\sigma$ - odchylenie standardowe, min i max - wartości minimalne i maksymalne, $Q_1$, $Q_2$, $Q_3$ - kwartyl dolny, środkowy oraz górny, $N$ - liczba badanych. Shapiro $p$ jest wynikiem testu Shapiro-Wilka.",
+        position='h!'))
+    prompt = "powyższa tabela przedstawia statystyki opisowe dla kolumn {}. {}".format(list(tab.index)[1::], tab.to_markdown())
+    return content, prompt
 
 
 def table_gen(data, name, col, crosstabs=[], aliases=[]):

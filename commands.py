@@ -4,11 +4,13 @@ from ai import Responses
 
 from addons import read_file, fm
 from conf import tex_config
+import tables
 
 
 class CommandTemplate(Protocol):
-    def __init__(self, id: int, flg: str, kind: str, ctx: str, mode: str, loc: str, paraphrase : bool, responses : Responses, alias : str = 'NoName'):
+    def __init__(self, id: int, flg: str, kind: str, ctx: str, mode: str, loc: str, paraphrase : bool, data, responses : Responses, alias : str = 'NoName'):
         self.id = id
+        self.df = data
         self.paraphrase = paraphrase
         self.flg = flg
         self.kind = kind
@@ -138,9 +140,26 @@ class FileCommand(CommandTemplate):
         self.apply_payload(payload)
 
 
-class TableCommand(CommandTemplate):
+class DescTableCommand(CommandTemplate):
     def execute(self):
-        ...
+        table, desc = tables.desctable(self.df[self.ctx])
+        self.calculated = True
+        self.responses.update_desc(self.alias, desc)
+        self.apply_payload(table)
+
+
+class DescCommand(CommandTemplate):
+    def execute(self):
+        desc = self.responses.get_desc(self.ctx)
+        self.calculated = True
+        self.apply_payload(desc)
+
+
+class CustomCommand(CommandTemplate):
+    def execute(self):
+        self.calculated = True
+        self.payload[tex_config["payload_alias"]] = self.ctx
+
 
 class QueryCommand(CommandTemplate):
     def execute(self):
@@ -150,8 +169,6 @@ class QueryCommand(CommandTemplate):
 class StatisticCommand(CommandTemplate):
     def execute(self):
         ...
-
-
 
 
 class PlotCommand(CommandTemplate):

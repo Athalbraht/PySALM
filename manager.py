@@ -6,8 +6,9 @@ from ai import Responses
 from typing import Callable
 
 from addons import fm
-from commands import (AICommand, CommandTemplate, FileCommand, PlotCommand,
-                      QueryCommand, StatisticCommand, TableCommand,
+from commands import (CommandTemplate, FileCommand, DescTableCommand, DescCommand, CustomCommand,
+                      PlotCommand, AICommand,
+                      QueryCommand, StatisticCommand,
                       UnsupportedCommand)
 from conf import structure, tex_config
 from texbuilder import TeXbuilder
@@ -22,7 +23,7 @@ class CommandManager():
         self.queue : list[CommandTemplate] = []
         self.last_id : int = 0
         self.responses = responses
-        self.mapping = {
+        self.command_map = {
             'file' : {
                 'desc' : FileCommand,
                 'table': FileCommand,
@@ -30,8 +31,8 @@ class CommandManager():
                 'stat': UnsupportedCommand,
             },
             'gen' : {
-                'desc' : AICommand,
-                'table': TableCommand,
+                'desc' : DescCommand,
+                'desctable': DescTableCommand,
                 'plot': PlotCommand,
                 'stat': StatisticCommand,
             },
@@ -41,6 +42,12 @@ class CommandManager():
                 'plot': QueryCommand,
                 'stat': QueryCommand,
             },
+            "gendesc" : {
+                'desc' : DescCommand,
+            },
+            'static' : {
+                'desc' : CustomCommand,
+            }
         }
 
     def create_id(self):
@@ -66,19 +73,20 @@ class CommandManager():
             "loc" : loc,
             "alias" : alias,
             "paraphrase" : paraphrase,
+            "data" : self.df,
             "responses" : self.responses,
         }
 
         # SET METHOD TODO
 
-        command : CommandTemplate = FileCommand(**params)
+        command : CommandTemplate = self.command_map[flg][kind](**params)
         self.commands.append(command)
         return command
 
     def create_queue(self):
         """Define priority of instructions."""
         print("\t- Sorting instructions list")
-        hierarchy = ['file', 'gen', 'load']
+        hierarchy = ['file', 'gen', 'load', 'static', 'gendesc']
         self.queue = sorted(self.commands, key=lambda obj: hierarchy.index(obj.flg))
 
     def execute_queue(self):
