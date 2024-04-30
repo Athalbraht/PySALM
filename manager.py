@@ -1,3 +1,5 @@
+import os
+import shutil
 from pandas import DataFrame
 from subprocess import check_output
 from ai import Responses
@@ -7,7 +9,7 @@ from addons import fm
 from commands import (AICommand, CommandTemplate, FileCommand, PlotCommand,
                       QueryCommand, StatisticCommand, TableCommand,
                       UnsupportedCommand)
-from conf import structure
+from conf import structure, tex_config
 from texbuilder import TeXbuilder
 
 
@@ -92,14 +94,13 @@ class CommandManager():
 class Analysis:
     """Session analysis builder."""
 
-    def __init__(self, tex_config: dict, data : DataFrame, compile: bool = False, doc_type: str = "latex"):
+    def __init__(self, tex_config: dict, data : DataFrame, doc_type: str = "latex"):
         """Session manager for analysis session."""
         self.structure : Callable
         self.responses : Responses = Responses.init(tex_config['responses_file'])
         self.df = data
         self.command_manager : CommandManager = CommandManager(self.responses, self.df)
         self.document : TeXbuilder = TeXbuilder("Report", config=tex_config, init=True)
-        self.compile = compile
 
     def register_commands(self):
         self.structure = structure(self.command_manager)
@@ -124,16 +125,32 @@ class Analysis:
 
     def compile(self):
         try:
-            pass
-            # compile_config = self.config["compile"]
-            # command = "{} {} {}".format(
-            #     compile_config['executable'],
-            #     compile_config['options'],
-            #      FIX self.config['']
-            #      add abs_path in config file regardless to TeXbuilder class
+            print("- Compiling document... ", end='')
+            compile_config = tex_config['compile']
+            filename = tex_config['filename']
+            file_path = os.path.join(tex_config['folder'], filename + ".tex")
+            command = "{} {} {}".format(
+                compile_config['executable'],
+                compile_config['options'],
+                file_path,
+            )
+            for n in range(2):
+                _ = check_output(command, shell=True)
 
-            # )
-            # print("- Compiling {} document ".format(compile_config["method"]))
+            shutil.copy(filename + ".pdf", file_path + ".pdf")
+            ext2del = [
+                ".log",
+                ".aux",
+                ".lof",
+                ".lot",
+                ".out",
+                ".toc",
+                ".pdf",
+            ]
+            for file in ext2del:
+                os.remove(filename + file)
+
         except Exception as e:
-            print(fm("Fail", 'red'))
-            print(e)
+            print("{} {}".format(fm("FAIL", "red"), e))
+        else:
+            print(fm('DONE'))
