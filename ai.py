@@ -22,6 +22,8 @@ class Responses(DataFrame):
                 {
                     "alias" : [],
                     "prompt" : [],
+                    "stack" : [],
+                    "paraphrased" : [],
                     "output" : [],
                     # "type" : [],
                     # "content" : [],
@@ -42,13 +44,22 @@ class Responses(DataFrame):
         try:
             idx = self[self['alias'] == alias].index[-1]
         except:
-            self.loc[len(self) + 1] = [alias, '', '']
+            self.loc[len(self) + 1] = [alias, ' ', ' ', False , ' ']
             idx = self[self['alias'] == alias].index[-1]
         finally:
             return idx
 
+    def paraphrased(self, alias, _set = False) -> bool:
+        if _set:
+            self.loc[self.find_index(alias), 'paraphrased'] = True
+        return self.loc[self.find_index(alias), 'paraphrased']
+
     def update_prompt(self, alias, prompt):
-        self.loc[self.find_index(alias), 'prompt'] += prompt
+        self.loc[self.find_index(alias), 'prompt'] = prompt
+        self.save()
+
+    def update_stack(self, alias, prompt):
+        self.loc[self.find_index(alias), 'stack'] += prompt
         self.save()
 
     def update_response(self, alias, msg):
@@ -61,7 +72,7 @@ class Responses(DataFrame):
     def save(self):
         """Save temlates to file."""
         print("\t- saving templates to {}".format(self.templates_path))
-        self.to_csv(self.templates_path)
+        self.to_csv(self.templates_path, index=False)
 
 
 class AI():

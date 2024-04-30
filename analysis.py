@@ -1,6 +1,18 @@
+__version__ = "v0.1.0"
 from conf import tex_config, data_loader
 from sys import argv
 from manager import Analysis
+
+
+print("""
+########################################
+## Starting analysis...
+## StatPAI {}
+## Author Albert Szadziński
+## License: MIT
+########################################
+
+      """.format(__version__))
 
 if __name__ == "__main__":
     df = data_loader(argv[1])
@@ -11,5 +23,5 @@ if __name__ == "__main__":
     analysis.build_document()
     analysis.compile()
 
-    #df = data_loader("data/data.xlsx")
-    #data = generate_metric(df)
+    # df = data_loader("data/data.xlsx")
+    # data = generate_metric(df)

@@ -1,3 +1,4 @@
+*.csv
 *static*
 *output*
 **cache**

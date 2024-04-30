@@ -47,12 +47,14 @@ class CommandManager():
         self.last_id += 1
         return self.last_id
 
-    def register(self, flg: str, kind: str, ctx: str, mode: str = 'static', loc: str = 'inline', alias='Noname', *args, **kwargs) -> None:
-        print("\t- Registering {} as {} for {} in {} mode".format(
+    def register(self, flg: str, kind: str, ctx: str, mode: str = 'static', paraphrase: bool = False, loc: str = 'inline', alias='NoName', *args, **kwargs) -> None:
+        print("\t- Registering {} as {} for {} in {} mode p{}".format(
             fm(kind),
             fm(flg, 'yellow'),
             fm(ctx, 'cyan'),
-            fm(mode, 'red')))
+            fm(mode, 'red'),
+            fm(paraphrase),
+        ))
         orderID = self.create_id()
         # runtime_data =   TODO
         params = {
@@ -63,6 +65,7 @@ class CommandManager():
             "mode" : mode,
             "loc" : loc,
             "alias" : alias,
+            "paraphrase" : paraphrase,
             "responses" : self.responses,
         }
 
@@ -135,7 +138,7 @@ class Analysis:
                 file_path,
             )
             for n in range(2):
-                _ = check_output(command, shell=True)
+                _ = check_output(command + " 1 > /dev/null", shell=True)
 
             shutil.copy(filename + ".pdf", file_path + ".pdf")
             ext2del = [

@@ -7,14 +7,18 @@ from conf import tex_config
 
 
 class CommandTemplate(Protocol):
-    def __init__(self, id: int, flg: str, kind: str, ctx: str, mode: str, loc: str, responses : Responses, alias : str):
+    def __init__(self, id: int, flg: str, kind: str, ctx: str, mode: str, loc: str, paraphrase : bool, responses : Responses, alias : str = 'NoName'):
         self.id = id
+        self.paraphrase = paraphrase
         self.flg = flg
         self.kind = kind
         self.ctx = ctx
         self.mode = mode
         self.loc = loc
-        self.alias = alias
+        if alias == "NoName":
+            self.alias = ctx
+        else:
+            self.alias = alias
         self.calculated : bool = False
         self.payload : dict = {
             "%%LOC" : self.loc,
@@ -24,7 +28,8 @@ class CommandTemplate(Protocol):
             "%%PREFRAME%%" : "",
             "%%POSTFRAME%%" : "",
         }
-        self.responces : Responses = responses
+        self.responses : Responses = responses
+        self.update_prompt("")
 
     def __repr__(self):
         return "{}:{}:{}:{}:{}".format(
@@ -62,9 +67,37 @@ class CommandTemplate(Protocol):
         """
         ...
 
-    def db_push(self, content : str):
+    def update_response(self, content : str):
+        """Save paylod as csv entry."""
+        self.responses.update_response(self.alias, content)
+
+    def update_prompt(self, content : str):
         """Save paylod as csv entry."""
         self.responses.update_prompt(self.alias, content)
+
+    def apply_payload(self, payload):
+        if self.mode == 'global':
+            mode = tex_config['ai']['mode']
+        else:
+            mode = self.mode
+
+        if mode == 'static':
+            if not self.responses.paraphrased(self.alias) and self.paraphrase:
+                pass  # SEND TO AI
+            response = self.responses.get_response(self.alias)
+            if response == " ":
+                self.update_response(payload)
+                self.payload[tex_config["payload_alias"]] = payload
+            else:
+                self.payload[tex_config["payload_alias"]] = response
+
+        elif mode == 'uniqe':
+            if self.paraphrase:
+                pass  # SEND TO AI
+                self.responses.paraphrased(self.alias, True)
+            response = self.responses.get_response(self.alias)
+            self.update_response(payload)
+            self.payload[tex_config["payload_alias"]] = payload
 
 
 class UnsupportedCommand(CommandTemplate):
@@ -102,8 +135,12 @@ class FileCommand(CommandTemplate):
     def execute(self):
         payload = read_file(os.path.join(tex_config["assets_folder"], self.ctx))
         self.calculated = True
-        self.payload[tex_config["payload_alias"]] = payload
+        self.apply_payload(payload)
 
+
+class TableCommand(CommandTemplate):
+    def execute(self):
+        ...
 
 class QueryCommand(CommandTemplate):
     def execute(self):
@@ -115,9 +152,6 @@ class StatisticCommand(CommandTemplate):
         ...
 
 
-class TableCommand(CommandTemplate):
-    def execute(self):
-        ...
 
 
 class PlotCommand(CommandTemplate):
