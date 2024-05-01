@@ -8,9 +8,9 @@ from typing import Callable
 from stats import get_power
 
 from addons import fm
-from commands import (CommandTemplate, FileCommand, DescTableCommand, DescCommand, CustomCommand, CountTableCommand, CrossTableCommand, ExpandTableCommand, PowerTableCommand, PowerPlotCommand,
-                      PlotCommand, AICommand,
-                      QueryCommand, StatisticCommand,
+from commands import (CommandTemplate, FileCommand, DescTableCommand, DescCommand, CustomCommand,
+                      CountTableCommand, CrossTableCommand, ExpandTableCommand, PowerTableCommand,
+                      PowerPlotCommand, StatTestCommand, StatCorrCommand, PlotCommand, QueryCommand,
                       UnsupportedCommand)
 from conf import structure, tex_config
 from texbuilder import TeXbuilder
@@ -43,7 +43,8 @@ class CommandManager():
                 'expandtable': ExpandTableCommand,
                 'plot': PlotCommand,
                 'powerplot': PowerPlotCommand,
-                'stat': StatisticCommand,
+                'stattest': StatTestCommand,
+                'statcorr': StatCorrCommand,
             },
             'load' : {
                 'desc' : QueryCommand,

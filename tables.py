@@ -1,8 +1,8 @@
 import pandas as pd
+from scipy.stats import shapiro
 
 from addons import fix_desc
 from conf import tab_path
-from scipy.stats import shapiro
 
 
 def desctable(data):

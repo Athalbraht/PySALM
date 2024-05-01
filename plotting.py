@@ -1,13 +1,13 @@
 import os
+
 import matplotlib.pyplot as plt
+import numpy as np
+import statsmodels.stats.power as smp
 from click import style
+from pandas import DataFrame
 
 from addons import type_detector
 from conf import pic_ext, sns, sns_api, tex_config
-
-import statsmodels.stats.power as smp
-import numpy as np
-from pandas import DataFrame
 
 
 def plot_power(cat=10, effect_size=[0.5, 0.99], a=0.05, lx=30, max_p=0.8, alias='chipower'):

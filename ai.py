@@ -1,6 +1,8 @@
 import os
+
 from openai import OpenAI
 from pandas import DataFrame, read_csv
+
 from conf import tex_config
 
 

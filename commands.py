@@ -1,10 +1,10 @@
 import os
 from typing import Protocol
-from ai import Responses
 
-from addons import read_file, fm
-from conf import tex_config
 import tables
+from addons import fm, read_file
+from ai import Responses
+from conf import tex_config
 from plotting import plot, plot_power
 
 
@@ -230,7 +230,12 @@ class QueryCommand(CommandTemplate):
         ...
 
 
-class StatisticCommand(CommandTemplate):
+class StatCorrCommand(CommandTemplate):
+    def execute(self):
+        ...
+
+
+class StatTestCommand(CommandTemplate):
     def execute(self):
         ...
 

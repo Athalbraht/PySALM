@@ -1,8 +1,8 @@
 __version__ = "v0.1.0"
-from conf import tex_config, data_loader
 from sys import argv
-from manager import Analysis
 
+from conf import data_loader, tex_config
+from manager import Analysis
 
 print("""
 ########################################
