@@ -33,7 +33,6 @@ def crosstab(data, col):
         pass
     else:
         tab = (pd.crosstab(data[col], data[col], margins=True, normalize=True) * 100).round(1)
-    tables.append(tab)
     tab = (tab.astype(str) + "%").to_latex(
         caption="Tabela krzyżowa zależności {} między {}".format(col, crosstab), label="crosstab:{}-{}"
         .format(name, aliases[i]), position="h!")
