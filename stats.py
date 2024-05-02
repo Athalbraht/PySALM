@@ -8,32 +8,32 @@ from pandas import DataFrame, crosstab
 from conf import crv, pval
 
 
-def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min_n: DataFrame, dep : str = 'ind') -> DataFrame:
+def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min_n: DataFrame, dep : str = 'ind', debug = False) -> DataFrame:
     test_map = {
         'n' : {
             'ind': {
                 '2' : {
                     'n': {
-                        'norm' : [chi2, 'chi2'],
+                        'norm' : [chi2, 'chi2', '$\\chi^2$'],
                     },
                     'o': {
-                        'norm' : [mannwhitneyu, "T"],
+                        'norm' : [mannwhitneyu, "T", "Manna-Whitneya"],
                     },
                     'q': {
-                        'norm': [ttest, "T"],
-                        'rm': [mannwhitneyu, "T"],
+                        'norm': [ttest, "T", 'T'],
+                        'rm': [mannwhitneyu, "T", "Manna-Whitneya"],
                     },
                 },
                 '3': {
                     'n': {
-                        'norm' : [chi2, "chi2"],
+                        'norm' : [chi2, "chi2", "$\\chi^2$"],
                     },
                     'o': {
-                        'norm' : [kruskal, "T"],
+                        'norm' : [kruskal, "T", 'Kruskal-Wallis'],
                     },
                     'q': {
-                        'norm': [anova, "F"],
-                        'rm': [kruskal, "T"],
+                        'norm': [anova, "F", "ANOVA"],
+                        'rm': [kruskal, "T", "Kruskala-Wallisa"],
                     },
                 },
             },
@@ -68,6 +68,7 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
         'pass' : [],
         'e_size' : [],
         'p' : [],
+        'tname' : [],
     }
 
     def type_detect(x):
@@ -87,45 +88,60 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
     df = DataFrame(df_struct, dtype='object')
     for _groups in groups:
         for _values in values:
-            print("- Calculating stat for  {} - {}".format(fm(_groups), fm(_values)))
-            gtype = type_detect(_groups)
-            vtype = type_detect(_values)
-            tdata = data[[_groups, _values]]
-            if gtype == 'n':
-                if vtype in ['q', 'o']:
-                    gsize = tdata.groupby(_groups).count()
-                elif vtype == 'n':
-                    gsize = crosstab(tdata[_values], tdata[_groups])
-                else:
-                    print("Nieznany typ {} - {} ".format(_groups, _values))
-                fixed_col = fix_size(gsize)
-                if len(fixed_col) < 2:
-                    print('Za mało danych: {} - {}'.format(_groups, _values))
-                    continue
-                tdata = tdata[tdata[_groups].isin(fixed_col)]
-                data_list = [tdata[tdata[_groups] == cat][_values] for cat in fixed_col]
-
-                if len(fixed_col) == 2:
-                    struct = test_map['n'][dep]['2'][vtype]
-                else:
-                    struct = test_map['n'][dep]['3'][vtype]
-
+            try:
+                if debug:
+                    import pdb
+                    pdb.set_trace()
+                print("- Calculating stat for  {} - {}".format(fm(_groups), fm(_values)))
+                gtype = type_detect(_groups)
+                vtype = type_detect(_values)
+                tdata = data[[_groups, _values]]
                 sub = 'norm'
-                ttype = struct[sub][1]
-                try:
+                if gtype == 'n':
+                    if vtype in ['q', 'o']:
+                        gsize = tdata.groupby(_groups).count()
+                        fixed_col = fix_size(gsize)
+                        tdata = tdata[tdata[_groups].isin(fixed_col)]
+                        data_list = [tdata[tdata[_groups] == cat][_values] for cat in fixed_col]
+                        if vtype == 'q':
+                            flat = []
+                            for i in data_list:
+                                flat += i.to_list()
+                            _, p = sp.stats.shapiro(flat)
+                            if p < 0.05:
+                                sub = 'rm'
+                    elif vtype == 'n':
+                        tdata = crosstab(tdata[_groups], tdata[_values])
+                        tdata[tdata > 5].dropna(inplace=True)
+                        fixed_col = list(tdata.columns)
+                        data_list = [tdata]
+
+                    else:
+                        print("Nieznany typ {} - {} ".format(_groups, _values))
+                    if len(fixed_col) < 2:
+                        print('Za mało danych: {} - {}'.format(_groups, _values))
+                        continue
+
+                    if len(fixed_col) == 2:
+                        struct = test_map['n'][dep]['2'][vtype]
+                    else:
+                        struct = test_map['n'][dep]['3'][vtype]
+
+                    ttype = struct[sub][1]
+                    tname = struct[sub][2]
                     result, p, ef = struct[sub][0](*data_list)
                     _pass = False
                     if p < 0.05:
                         _pass = True
 
-                    df.loc[len(df) + 1] = [_groups, _values, ttype, result, fixed_col, _pass, ef,p]
-                except Exception as e:
-                    print("- {} in {} {}\n{}".format(fm('Error', "red"), _groups, _values, e))
+                    df.loc[len(df) + 1] = [_groups, _values, ttype, result, fixed_col, _pass, ef, p, tname]
 
-            elif gtype == 'q':
-                pass
-            elif gtype == 'p':
-                pass
+                elif gtype == 'q':
+                    pass
+                elif gtype == 'p':
+                    pass
+            except Exception as e:
+                print("- {} in {} {}\n{}".format(fm('Error', "red"), _groups, _values, e))
     return df
 
 
@@ -195,7 +211,7 @@ def anova(*ct):
         result["$\\overline{{x_{}}}$".format(i + 1)] = np.mean(_set)
         result["$\\sigma_{}$".format(i + 1)] = np.std(_set)
 
-    es = ss_between / ss_total
+    es = abs(ss_between / ss_total)
     _result = {
         "F" : stat,
         "p" : p,
@@ -207,8 +223,8 @@ def anova(*ct):
 
 def chi2(ct):
     ct = np.array(ct)
-    stat, p = sp.stats.chi2_contingency(ct)
-    cramerv = np.sqrt((stat / ct.sum()) / (min(ct.shape) - 1))
+    stat, p, dff, exp = sp.stats.chi2_contingency(ct)
+    cramerv = abs(np.sqrt((stat / ct.sum()) / (min(ct.shape) - 1)))
     result = {
         "$\\chi^2$" : stat,
         "p" : p,
@@ -221,6 +237,7 @@ def ttest(ct1, ct2):
     stat, p = sp.stats.ttest_ind(ct1, ct2)
     dm = ct1.mean() - ct2.mean()
     pooled_std = np.sqrt(((len(ct1) - 1) * np.var(ct1) + (len(ct2) - 1) * np.var(ct2)) / (len(ct1) + len(ct2) - 2))
+    es = abs(dm / pooled_std)
     result = {
         "$\\overline{x_1}$" : np.mean(ct1),
         "$\\sigma_1$" : np.std(ct1),
@@ -228,14 +245,17 @@ def ttest(ct1, ct2):
         "$\\sigma_2$" : np.std(ct2),
         "T" : stat,
         "p" : p,
-        "dCohena" : dm / pooled_std,
+        "dCohena" : es,
     }
-    return result, p, dm / pooled_std
+    return result, p, es
 
 
 def mannwhitneyu(ct1, ct2):
+    ct1 = ct1.apply(lambda x: int(str(x).split('.')[0]))
+    ct2 = ct2.apply(lambda x: int(str(x).split('.')[0]))
     stat, p = sp.stats.mannwhitneyu(ct1, ct2)
-    es = stat / (len(ct1 * ct2))
+    # es = stat / (len(ct1 * ct2))
+    es = abs((2 * stat) / (len(ct1) * len(ct2)) - 1)  # cliff delta d
     result = {
         "$Q_1$" : np.median(ct1),
         "$IRQ_1$" : np.percentile(ct1, 75) - np.percentile(ct1, 25),
@@ -249,6 +269,8 @@ def mannwhitneyu(ct1, ct2):
 
 
 def kruskal(*ct):
+    for i,ii in enumerate(ct):
+        ct[i] = ii.apply(lambda x: int(str(x).split('.')[0]))
     stat, p = sp.stats.kruskal(*ct)
     n = sum([len(i) for i in ct])
 
@@ -257,7 +279,7 @@ def kruskal(*ct):
         result["$Q_{}$".format(i + 1)] = np.median(_set)
         result["$IRQ_{}$".format(i + 1)] = np.percentile(_set, 75) - np.percentile(_set, 25)
 
-    es = stat / ((n**2 - 1) / (n + 1))
+    es = abs(stat / ((n**2 - 1) / (n + 1)))
     _result = {
         "Z" : stat,
         "p" : p,
@@ -267,7 +289,7 @@ def kruskal(*ct):
     return result, p, es
 
 
-def get_power(cat=10, effect_size=[0.5, 0.99], a=0.05, lx=30, max_p=0.8):
+def get_power(cat=10, effect_scale=0.01, a=0.05, lx=30, max_p=0.8):
     df = DataFrame({
         'Typ testu' : [],
         'Liczba kategorii' : [],
@@ -277,14 +299,14 @@ def get_power(cat=10, effect_size=[0.5, 0.99], a=0.05, lx=30, max_p=0.8):
         'Alfa' : [],
     })
     for c in range(1, cat):
-        for e in np.linspace(effect_size[0], effect_size[1], 10):
+        for e in np.linspace(max_p - effect_scale, max_p + effect_scale, 10):
             for xx in range(1, lx):
                 df.loc[len(df) + 1] = ['chi2', c, e, smp.GofChisquarePower().solve_power(effect_size=e, nobs=xx, alpha=a, n_bins=c), xx, a]
                 df.loc[len(df) + 1] = ['F', c, e, smp.GofChisquarePower().solve_power(effect_size=e, nobs=xx, alpha=a, n_bins=c), xx, a]
     df.dropna(inplace=True)
     df['Wielkość próby'] = df['Wielkość próby'].astype(int)
     df['Liczba kategorii'] = df['Liczba kategorii'].astype(int)
-    df = df[(df['Moc testu'] > 0.79) & (df['Moc testu'] < 0.81)]
+    df = df[(df['Moc testu'] > max_p - 0.01) & (df['Moc testu'] < max_p + 0.01)]
     c = crosstab(df['Liczba kategorii'], df['Typ testu'], aggfunc='mean', values=df['Wielkość próby'])
     return c
 
