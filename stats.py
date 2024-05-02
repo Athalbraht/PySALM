@@ -1,10 +1,133 @@
 import numpy as np
 import scipy as sp
 import statsmodels.stats.power as smp
+from addons import fm
 from click import style
 from pandas import DataFrame, crosstab
 
 from conf import crv, pval
+
+
+def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min_n: DataFrame, dep : str = 'ind') -> DataFrame:
+    test_map = {
+        'n' : {
+            'ind': {
+                '2' : {
+                    'n': {
+                        'norm' : [chi2, 'chi2'],
+                    },
+                    'o': {
+                        'norm' : [mannwhitneyu, "T"],
+                    },
+                    'q': {
+                        'norm': [ttest, "T"],
+                        'rm': [mannwhitneyu, "T"],
+                    },
+                },
+                '3': {
+                    'n': {
+                        'norm' : [chi2, "chi2"],
+                    },
+                    'o': {
+                        'norm' : [kruskal, "T"],
+                    },
+                    'q': {
+                        'norm': [anova, "F"],
+                        'rm': [kruskal, "T"],
+                    },
+                },
+            },
+            'dep' : {
+                '2': {
+                    'n' : [],
+                    'o' : [],
+                    'q' : {
+                        'norm' : [],
+                        'rm' : [],
+                    },
+                },
+                '3': {
+                    'n' : [],
+                    'o' : [],
+                    'q' : {
+                        'norm' : [],
+                        'rm' : [],
+                    },
+                },
+            }
+        },
+        'o' : [spearman],
+        'q' : [pearson],
+    }
+    df_struct = {
+        'groups' : [],
+        'values' : [],
+        'ttype' : [],
+        'result' : [],
+        'fixed_col' : [],
+        'pass' : [],
+        'e_size' : [],
+        'p' : [],
+    }
+
+    def type_detect(x):
+        for i in type_dict:
+            if x in type_dict[i]:
+                return i
+
+    def fix_size(gsize, test_type='chi2'):  # change alg.
+        prelen = len(gsize)
+        _min = min_n[test_type][prelen]
+        gsize = gsize[gsize > _min]
+        gsize.dropna(inplace=True)
+        if len(gsize) != prelen:
+            print('Usunięto kategorie: {} - {}'.format(_groups, _values))
+        return list(gsize.index)
+
+    df = DataFrame(df_struct, dtype='object')
+    for _groups in groups:
+        for _values in values:
+            print("- Calculating stat for  {} - {}".format(fm(_groups), fm(_values)))
+            gtype = type_detect(_groups)
+            vtype = type_detect(_values)
+            tdata = data[[_groups, _values]]
+            if gtype == 'n':
+                if vtype in ['q', 'o']:
+                    gsize = tdata.groupby(_groups).count()
+                elif vtype == 'n':
+                    gsize = crosstab(tdata[_values], tdata[_groups])
+                else:
+                    print("Nieznany typ {} - {} ".format(_groups, _values))
+                fixed_col = fix_size(gsize)
+                if len(fixed_col) < 2:
+                    print('Za mało danych: {} - {}'.format(_groups, _values))
+                    continue
+                tdata = tdata[tdata[_groups].isin(fixed_col)]
+                data_list = [tdata[tdata[_groups] == cat][_values] for cat in fixed_col]
+
+                if len(fixed_col) == 2:
+                    struct = test_map['n'][dep]['2'][vtype]
+                else:
+                    struct = test_map['n'][dep]['3'][vtype]
+
+                sub = 'norm'
+                ttype = struct[sub][1]
+                try:
+                    result, p, ef = struct[sub][0](*data_list)
+                    _pass = False
+                    if p < 0.05:
+                        _pass = True
+
+                    df.loc[len(df) + 1] = [_groups, _values, ttype, result, fixed_col, _pass, ef,p]
+                except Exception as e:
+                    print("- {} in {} {}\n{}".format(fm('Error', "red"), _groups, _values, e))
+
+            elif gtype == 'q':
+                pass
+            elif gtype == 'p':
+                pass
+    return df
+
 
 # relation
 # reg params B-wsp niestandarysow, se-bladstd, beta-wsp stand., t-wyiktestu
@@ -48,7 +171,7 @@ def spearman(ct1, ct2):
         "rSpearman" : stat,
         "p" : p,
     }
-    return result
+    return result, p
 
 
 def pearson(ct1, ct2):
@@ -57,7 +180,7 @@ def pearson(ct1, ct2):
         "rPearson" : stat,
         "p" : p,
     }
-    return result
+    return result, p
 
 
 def anova(*ct):
@@ -67,12 +190,19 @@ def anova(*ct):
     ss_between = sum([len(group) * (mean - overall_mean)**2 for group, mean in zip(ct, group_means)])
     ss_total = sum((value - overall_mean)**2 for group in ct for value in group)
 
-    result = {
+    result = {}
+    for i, _set in enumerate(ct):
+        result["$\\overline{{x_{}}}$".format(i + 1)] = np.mean(_set)
+        result["$\\sigma_{}$".format(i + 1)] = np.std(_set)
+
+    es = ss_between / ss_total
+    _result = {
         "F" : stat,
         "p" : p,
-        "$\\eta^2$" : ss_between / ss_total
+        "$\\eta^2$" : es,
     }
-    return result
+    result.update(_result)
+    return result, p, es
 
 
 def chi2(ct):
@@ -84,44 +214,62 @@ def chi2(ct):
         "p" : p,
         "$V_c$" : cramerv
     }
-    return result
+    return result, p, cramerv
 
 
 def ttest(ct1, ct2):
-    stat, p, _ = sp.stats.ttest_ind(ct1, ct2)
-    dm = ct1.mean() - ct2.mean90
+    stat, p = sp.stats.ttest_ind(ct1, ct2)
+    dm = ct1.mean() - ct2.mean()
     pooled_std = np.sqrt(((len(ct1) - 1) * np.var(ct1) + (len(ct2) - 1) * np.var(ct2)) / (len(ct1) + len(ct2) - 2))
     result = {
+        "$\\overline{x_1}$" : np.mean(ct1),
+        "$\\sigma_1$" : np.std(ct1),
+        "$\\overline{x_2}$" : np.mean(ct2),
+        "$\\sigma_2$" : np.std(ct2),
         "T" : stat,
         "p" : p,
         "dCohena" : dm / pooled_std,
     }
-    return result
+    return result, p, dm / pooled_std
 
 
 def mannwhitneyu(ct1, ct2):
     stat, p = sp.stats.mannwhitneyu(ct1, ct2)
+    es = stat / (len(ct1 * ct2))
     result = {
+        "$Q_1$" : np.median(ct1),
+        "$IRQ_1$" : np.percentile(ct1, 75) - np.percentile(ct1, 25),
+        "$Q_2$" : np.median(ct2),
+        "$IRQ_2$" : np.percentile(ct2, 75) - np.percentile(ct2, 25),
         "Z" : stat,
         "p" : p,
-        "$\\eta^2$" : stat / (len(ct1 * ct2))
+        "$\\eta^2$" : es,
     }
-    return result
+    return result, p , es
 
 
-def kruksal(*ct):
-    stat, p = sp.stats.kruksal(*ct)
+def kruskal(*ct):
+    stat, p = sp.stats.kruskal(*ct)
     n = sum([len(i) for i in ct])
-    result = {
+
+    result = {}
+    for i, _set in enumerate(ct):
+        result["$Q_{}$".format(i + 1)] = np.median(_set)
+        result["$IRQ_{}$".format(i + 1)] = np.percentile(_set, 75) - np.percentile(_set, 25)
+
+    es = stat / ((n**2 - 1) / (n + 1))
+    _result = {
         "Z" : stat,
         "p" : p,
-        "$\\eta^2$" : stat / ((n**2 - 1) / (n + 1))
+        "$\\eta^2$" : es,
     }
-    return result
+    result.update(_result)
+    return result, p, es
 
 
 def get_power(cat=10, effect_size=[0.5, 0.99], a=0.05, lx=30, max_p=0.8):
     df = DataFrame({
+        'Typ testu' : [],
         'Liczba kategorii' : [],
         'Siła efektu' : [],
         'Moc testu' : [],
@@ -131,13 +279,14 @@ def get_power(cat=10, effect_size=[0.5, 0.99], a=0.05, lx=30, max_p=0.8):
     for c in range(1, cat):
         for e in np.linspace(effect_size[0], effect_size[1], 10):
             for xx in range(1, lx):
-                df.loc[len(df) + 1] = [c, e, smp.GofChisquarePower().solve_power(effect_size=e, nobs=xx, alpha=a, n_bins=c), xx, a]
+                df.loc[len(df) + 1] = ['chi2', c, e, smp.GofChisquarePower().solve_power(effect_size=e, nobs=xx, alpha=a, n_bins=c), xx, a]
+                df.loc[len(df) + 1] = ['F', c, e, smp.GofChisquarePower().solve_power(effect_size=e, nobs=xx, alpha=a, n_bins=c), xx, a]
     df.dropna(inplace=True)
     df['Wielkość próby'] = df['Wielkość próby'].astype(int)
     df['Liczba kategorii'] = df['Liczba kategorii'].astype(int)
-
-    c = df[(df['Moc testu'] > 0.79) & (df['Moc testu'] < 0.81)].groupby('Liczba kategorii').mean().astype(int)['Wielkość próby']
-    return df, c
+    df = df[(df['Moc testu'] > 0.79) & (df['Moc testu'] < 0.81)]
+    c = crosstab(df['Liczba kategorii'], df['Typ testu'], aggfunc='mean', values=df['Wielkość próby'])
+    return c
 
 
 def cramer_V(ct, chi2):

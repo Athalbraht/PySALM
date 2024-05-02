@@ -22,7 +22,7 @@ class CommandManager():
     def __init__(self, responses: Responses, data : DataFrame, ai):
         self.df = data
         self.ai = ai
-        _, self.powers = get_power()
+        self.powers = get_power()
         self.commands : list[CommandTemplate] = []
         self.queue : list[CommandTemplate] = []
         self.last_id : int = 0

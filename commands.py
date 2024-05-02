@@ -9,7 +9,8 @@ from plotting import plot, plot_power
 
 
 class CommandTemplate(Protocol):
-    def __init__(self, ai, powers, id: int, flg: str, kind: str, ctx: str, silent: bool, mode: str, loc: str, paraphrase : bool, data, responses : Responses, kwargs, alias : str = 'NoName'):
+    def __init__(self, ai, powers, id: int, flg: str, kind: str, ctx: str, silent: bool, mode: str, loc: str, paraphrase : bool,
+                 data, responses : Responses, kwargs, alias : str = 'NoName'):
         self.id = id
         self.ai = ai
         self.df = data
