@@ -4,6 +4,7 @@ from openai import OpenAI
 from pandas import DataFrame, read_csv
 
 from conf import tex_config
+from addons import fm
 
 
 class Responses(DataFrame):
@@ -91,7 +92,11 @@ class AI():
 
     def __init__(self, config=None):
         """Client init."""
-        self.client = OpenAI()
+
+        if os.getenv("OPENAI_API_KEY"):
+            self.client = OpenAI()
+        else:
+            print("- Cannot load {} from env.".format(fm('API KEY', 'red')))
         self.config = config
         #self.research_context = self.load_context()
         #self.responses = Responses(config['templates.csv'])
