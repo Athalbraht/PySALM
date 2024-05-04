@@ -89,15 +89,15 @@ class CommandTemplate(Protocol):
         else:
             mode = self.mode
 
-        if mode == 'static':
+        if mode == 'static' or mode == 'safe':
             # if not self.responses.paraphrased(self.alias) and self.paraphrase:
             # pass  # SEND TO AI
             response = self.responses.get_response(self.alias)
             if response == " ":
-                if self.kind == 'desc':
-                    response = self.ai.request(payload)
-                self.update_response(response)
-                self.payload[tex_config["payload_alias"]] = response
+                if self.kind == 'desc' and mode != 'safe':
+                    payload = self.ai.request(payload)
+                self.update_response(payload)
+                self.payload[tex_config["payload_alias"]] = payload
             else:
                 self.payload[tex_config["payload_alias"]] = response
 
@@ -105,7 +105,8 @@ class CommandTemplate(Protocol):
             if self.paraphrase:
                 pass  # SEND TO AI
                 self.responses.paraphrased(self.alias, True)
-            response = self.responses.get_response(self.alias)
+            # response = self.responses.get_response(self.alias)
+            payload = self.ai.request(payload)
             self.update_response(payload)
             self.payload[tex_config["payload_alias"]] = payload
 
