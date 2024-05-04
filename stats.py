@@ -8,7 +8,9 @@ from pandas import DataFrame, crosstab
 from conf import crv, pval
 
 
-def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min_n: DataFrame, dep : str = 'ind', debug = False) -> DataFrame:
+def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min_n: DataFrame, dep : str = 'ind', debug=False, debug_corr=False) -> DataFrame:
+    group_q, group_o = [], []
+    values_q, values_o = [], []
     test_map = {
         'n' : {
             'ind': {
@@ -56,9 +58,16 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
                 },
             }
         },
-        'o' : [spearman],
-        'q' : [pearson],
+        'o' : {
+            'o' : [spearman, 'Rs', 'R Spearman'],
+            'q' : [spearman, 'Rs', "R Spearman"],
+        },
+        'q' : {
+            'o' : [spearman, "Rs", "R Spearman"],
+            'q' : [pearson, "Rp", "R Pearson"],
+        },
     }
+
     df_struct = {
         'groups' : [],
         'values' : [],
@@ -86,7 +95,10 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
         return list(gsize.index)
 
     df = DataFrame(df_struct, dtype='object')
+    corr_groups = []
+    corr_values = []
     for _groups in groups:
+        corr_groups.append(_groups)
         for _values in values:
             try:
                 if debug:
@@ -110,6 +122,9 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
                             _, p = sp.stats.shapiro(flat)
                             if p < 0.05:
                                 sub = 'rm'
+                            values_q.append(vtype)
+                        elif vtype == 'o':
+                            values_o.append(vtype)
                     elif vtype == 'n':
                         tdata = crosstab(tdata[_groups], tdata[_values])
                         tdata[tdata > 5].dropna(inplace=True)
@@ -135,15 +150,54 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
                         _pass = True
 
                     df.loc[len(df) + 1] = [_groups, _values, ttype, result, fixed_col, _pass, ef, p, tname]
-
+                    corr_values.append(_values)
                 elif gtype == 'q':
-                    pass
-                elif gtype == 'p':
-                    pass
+                    group_q.append(gtype)
+                elif gtype == 'o':
+                    group_o.append(gtype)
+
             except Exception as e:
                 print("- {} in {} {}\n{}".format(fm('Error', "red"), _groups, _values, e))
-    return df
+    print('- Calculating correlations')
+    df_corr = DataFrame({
+        "group" : [],
+        'value' : [],
+        'corr' : [],
+        'p' : [],
+        'method' : [],
+        'result' : [],
+    })
 
+    if debug_corr:
+        import pdb
+        pdb.set_trace()
+    for group in corr_groups:
+        for value in values:
+            try:
+
+                gtype = type_detect(group)
+                vtype = type_detect(value)
+                gr = data[group]
+                vl = data[value]
+                if gtype == 'q' and vtype == 'q':
+                    corr, p = pearson(gr, vl)
+                    print('calc pearson')
+                    df_corr.loc[len(df_corr) + 1] = [group, value, corr['rPearson'], p, 'R-Pearson', corr]
+                elif gtype != 'n' and vtype != 'n' and gtype != 'multi' and vtype != 'multi':
+                    if vtype == 'o':
+                        vl = vl.apply(lambda x: int(str(x).split('.')[0]))
+                    if gtype == 'o':
+                        gr = gr.apply(lambda x: int(str(x).split('.')[0]))
+                    print('calc spearman')
+                    corr, p = spearman(gr, vl)
+                    df_corr.loc[len(df_corr) + 1] = [group, value, corr['rSpearman'], p, 'R-Spearman', corr]
+            except Exception as e:
+                print('Error {} {}'.format(group, value))
+                print(e)
+                import pdb
+                pdb.set_trace()
+
+    return df, df_corr
 
 # relation
 # reg params B-wsp niestandarysow, se-bladstd, beta-wsp stand., t-wyiktestu
@@ -269,7 +323,7 @@ def mannwhitneyu(ct1, ct2):
 
 
 def kruskal(*ct):
-    for i,ii in enumerate(ct):
+    for i, ii in enumerate(ct):
         ct[i] = ii.apply(lambda x: int(str(x).split('.')[0]))
     stat, p = sp.stats.kruskal(*ct)
     n = sum([len(i) for i in ct])
