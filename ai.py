@@ -117,7 +117,7 @@ class AI():
         )
         msg = self.completion.choices[0].message.content
         print(msg)
-        _ = input('click to continue')
+        #_ = input('click to continue')
         return msg
 
 

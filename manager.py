@@ -1,4 +1,5 @@
 import os
+from click import progressbar
 from ai import AI
 import shutil
 from pandas import DataFrame
@@ -105,15 +106,17 @@ class CommandManager():
 
     def execute_queue(self):
         print("\t- Executing analysis command")
-        for command in self.queue:
-            try:
-                print("\t\t- Executing command: {}: ".format(command.id), end='')
-                command.execute()
-            except Exception as e:
-                print(fm("Fail", 'red'), end='')
-                print(" {}".format(e))
-            else:
-                print(fm("Pass", 'green'))
+        with progressbar(self.queue) as bar:
+       
+            for command in bar:
+                try:
+                    print("\t\t- Executing command: {}: ".format(command.id), end='')
+                    command.execute()
+                except Exception as e:
+                    print(fm("Fail", 'red'), end='')
+                    print(" {}".format(e))
+                else:
+                    print(fm("Pass", 'green'))
 
 
 class Analysis:
