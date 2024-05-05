@@ -58,7 +58,7 @@ def plot(data, pset, alias, labels=[False, False], **conf):
                 "stat" : 'percent'
             }
             kwargs.update(conf)
-            g = sns.histplot(data, x=x, **kwargs)
+            g = sns.catplot(data, x=x, **kwargs)
             caption = 'Histogram dla kolumny {}'.format(x)
             labels[1] = "Procent"
         elif validator == 'q':
@@ -81,6 +81,7 @@ def plot(data, pset, alias, labels=[False, False], **conf):
             }
             kwargs.update(sns_api)
             g = sns.catplot(data, x=x, y=y, **kwargs)
+            caption = 'Rozkład zmiennych {} i {}'.format(x, y)
         elif validator == 'qq':
             kwargs = {
                 "marker" : '+',
@@ -95,10 +96,10 @@ def plot(data, pset, alias, labels=[False, False], **conf):
     else:
         print("\t\t{}".format(style("Unknown plot type {}".format(validator), fg="red")))
         return None
-    if labels[0] and validator != 'qq':
-        g.set_xlabel(labels[0])
-    if labels[1] and validator != 'qq':
-        g.set_ylabel(labels[1])
+    #if labels[0] and validator != 'qq':
+     #   g.set_xlabel(labels[0])
+    #if labels[1] and validator != 'qq':
+    #    g.set_ylabel(labels[1])
     filename = alias + pic_ext
     path = os.path.join(tex_config['folder'], 'pics', filename)
     plt.savefig(path)

@@ -78,6 +78,7 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
         'e_size' : [],
         'p' : [],
         'tname' : [],
+        'stat' : [],
     }
 
     def type_detect(x):
@@ -144,12 +145,12 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
 
                     ttype = struct[sub][1]
                     tname = struct[sub][2]
-                    result, p, ef = struct[sub][0](*data_list)
+                    result, p, ef, stat = struct[sub][0](*data_list)
                     _pass = False
                     if p < 0.05:
                         _pass = True
 
-                    df.loc[len(df) + 1] = [_groups, _values, ttype, result, fixed_col, _pass, ef, p, tname]
+                    df.loc[len(df) + 1] = [_groups, _values, ttype, result, fixed_col, _pass, ef, p, tname, stat]
                     corr_values.append(_values)
                 elif gtype == 'q':
                     group_q.append(gtype)
@@ -272,7 +273,7 @@ def anova(*ct):
         "$\\eta^2$" : es,
     }
     result.update(_result)
-    return result, p, es
+    return result, p, es,stat
 
 
 def chi2(ct):
@@ -284,7 +285,7 @@ def chi2(ct):
         "p" : p,
         "$V_c$" : cramerv
     }
-    return result, p, cramerv
+    return result, p, cramerv,stat
 
 
 def ttest(ct1, ct2):
@@ -301,7 +302,7 @@ def ttest(ct1, ct2):
         "p" : p,
         "dCohena" : es,
     }
-    return result, p, es
+    return result, p, es,stat
 
 
 def mannwhitneyu(ct1, ct2):
@@ -319,7 +320,7 @@ def mannwhitneyu(ct1, ct2):
         "p" : p,
         "$\\eta^2$" : es,
     }
-    return result, p , es
+    return result, p , es, stat
 
 
 def kruskal(*ct):
@@ -340,7 +341,7 @@ def kruskal(*ct):
         "$\\eta^2$" : es,
     }
     result.update(_result)
-    return result, p, es
+    return result, p, es, stat
 
 
 def get_power(cat=10, effect_scale=0.01, a=0.05, lx=30, max_p=0.8):
