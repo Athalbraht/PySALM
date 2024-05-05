@@ -5,7 +5,7 @@ from addons import fm
 from click import style
 from pandas import DataFrame, crosstab
 
-from conf import crv, pval, tests_tab, corr_tab, tex_config,type_dict
+from conf import crv, pval, tests_tab, corr_tab, tex_config, type_dict
 
 
 def make_stat(comm, df, c1, c2, power, mode='safe'):
@@ -397,8 +397,8 @@ def get_power(cat=10, effect_scale=0.01, a=0.05, lx=30, max_p=0.8):
     for c in range(1, cat):
         for e in np.linspace(max_p - effect_scale, max_p + effect_scale, 10):
             for xx in range(1, lx):
-                df.loc[len(df) + 1] = ['chi2', c, e, smp.GofChisquarePower().solve_power(effect_size=e, nobs=xx, alpha=a, n_bins=c), xx, a]
-                df.loc[len(df) + 1] = ['F', c, e, smp.GofChisquarePower().solve_power(effect_size=e, nobs=xx, alpha=a, n_bins=c), xx, a]
+                #adf.loc[len(df) + 1] = ['chi2', c, e, smp.GofChisquarePower().solve_power(effect_size=e, nobs=xx, alpha=a, n_bins=c), xx, a]
+                df.loc[len(df) + 1] = ['F i T', c, e, smp.GofChisquarePower().solve_power(effect_size=e, nobs=xx, alpha=a, n_bins=c), xx, a]
     df.dropna(inplace=True)
     df['Wielkość próby'] = df['Wielkość próby'].astype(int)
     df['Liczba kategorii'] = df['Liczba kategorii'].astype(int)

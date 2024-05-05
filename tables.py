@@ -5,6 +5,36 @@ from addons import fix_desc
 from conf import tab_path
 
 
+def eff(e,tp):
+    if tp =='chi2':
+        crv = {
+            "słaba": 0.1,
+            "umiarkowana": 0.15,
+            "silna": 0.25,
+            "bardzo silna": 1,
+        }
+    elif tp == 'n':
+        crv = {
+            "słaba": 0.3,
+            "umiarkowana": 0.5,
+            "silna": 0.7,
+            "bardzo silna": 1,
+        }
+    elif tp=='corr':
+        crv = {
+            "słaba": 0.3,
+            "umiarkowana": 0.5,
+            "silna": 0.7,
+            "bardzo silna": 1,
+        }
+    for i,j in crv.items():
+        if j < e:
+            return i
+
+
+    
+
+
 def corrtab(tab, ):
     tab = tab.round(3).astype(str)
     content = fix_desc(tab.to_latex(
@@ -38,7 +68,7 @@ def desctable(data):
 
 def powertable(powertab):
     content = fix_desc(powertab.to_latex(
-        caption="Minimalna wielkość próby dla testu statystycznego o określonych stopniach swobody (kategorii).", position='h!'))
+        caption="Minimalna wielkość próby dla testu statystycznego Ti F o określonych stopniach swobody (ilości kategorii).", position='h!'))
     prompt = "Tabela przedstawia minimalną wielkość próby dla testu o mocy powyżej 0.8 dla różnych ilości kategorii (stopni swobody)."
     return content, prompt
 
