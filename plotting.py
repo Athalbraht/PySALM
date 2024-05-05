@@ -48,10 +48,20 @@ def plot(data, pset, alias, labels=[False, False], **conf):
     caption = ''
     types = type_detector(pset)
     validator = types
-
+    #####################################################################
     if len(pset) == 1:
         x = pset[0]
-        if validator == 'q':
+        if validator == 'n' or validator == 'o':
+            kwargs = {
+                # "kde" : True,
+                "kind" : 'count',
+                "stat" : 'percent'
+            }
+            kwargs.update(conf)
+            g = sns.histplot(data, x=x, **kwargs)
+            caption = 'Histogram dla kolumny {}'.format(x)
+            labels[1] = "Procent"
+        elif validator == 'q':
             kwargs = {
                 # "kde" : True,
                 "bins" : 20,
@@ -62,6 +72,7 @@ def plot(data, pset, alias, labels=[False, False], **conf):
             g = sns.histplot(data, x=x, **kwargs)
             caption = 'Histogram dla kolumny {}'.format(x)
             labels[1] = "Procent"
+    #####################################################################
     elif len(pset) == 2:
         x, y = pset
         if validator == 'oq' or validator == 'nq':
@@ -79,7 +90,8 @@ def plot(data, pset, alias, labels=[False, False], **conf):
             }
             kwargs.update(conf)
             g = sns.jointplot(data, x=x, y=y, **kwargs)
-            caption = 'Rozkład zmiennych "{}" i "{}"'.format(x, y)
+            caption = 'Rozkład zmiennych {} i {}'.format(x, y)
+            # TODO REGRESSION PARAMS
     else:
         print("\t\t{}".format(style("Unknown plot type {}".format(validator), fg="red")))
         return None
