@@ -5,7 +5,24 @@ from addons import fm
 from click import style
 from pandas import DataFrame, crosstab
 
-from conf import crv, pval
+from conf import crv, pval, tests_tab, corr_tab, tex_config,type_dict
+
+
+def make_stat(comm, df, c1, c2, power, mode='safe'):
+    ddf, cr = auto_test(df, c1, c2, type_dict, power)
+    tables = tests_tab(ddf)
+    corr = corr_tab(cr)
+    commands = []
+    id = "{}-{}".format(c1[0], c2[0])
+    for tab in tables:
+        if len(tab) > 0:
+            commands.append(comm.register('gen', 'autostatable', tab, mode=mode, alias=id + "A"))
+            commands.append(comm.register('gendesc', 'desc', id + "A", mode=mode, alias=id + "B"))
+
+    if len(corr) > 0:
+        commands.append(comm.register('gen', 'corrtable', corr, mode=mode, alias=id + "C"))
+        commands.append(comm.register('gendesc', 'desc', id + "C", mode=mode, alias=id + "CC"))
+    return commands
 
 
 def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min_n: DataFrame, dep : str = 'ind', debug=False, debug_corr=False) -> DataFrame:
@@ -72,7 +89,8 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
         'groups' : [],
         'values' : [],
         'ttype' : [],
-        'result' : [],
+        'headers' : [],
+        'data' : [],
         'fixed_col' : [],
         'pass' : [],
         'e_size' : [],
@@ -145,12 +163,12 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
 
                     ttype = struct[sub][1]
                     tname = struct[sub][2]
-                    result, p, ef, stat = struct[sub][0](*data_list)
+                    result, dd, p, ef, stat = struct[sub][0](*data_list)
                     _pass = False
                     if p < 0.05:
                         _pass = True
 
-                    df.loc[len(df) + 1] = [_groups, _values, ttype, result, fixed_col, _pass, ef, p, tname, stat]
+                    df.loc[len(df) + 1] = [_groups, _values, ttype, result, dd, fixed_col, _pass, ef, p, tname, stat]
                     corr_values.append(_values)
                 elif gtype == 'q':
                     group_q.append(gtype)
@@ -261,31 +279,35 @@ def anova(*ct):
     ss_between = sum([len(group) * (mean - overall_mean)**2 for group, mean in zip(ct, group_means)])
     ss_total = sum((value - overall_mean)**2 for group in ct for value in group)
 
-    result = {}
+    data = []
+    headers = []
     for i, _set in enumerate(ct):
-        result["$\\overline{{x_{}}}$".format(i + 1)] = np.mean(_set)
-        result["$\\sigma_{}$".format(i + 1)] = np.std(_set)
+        headers.append("$\\overline{{x_{}}}$".format(i + 1))
+        data.append(np.mean(_set))
+        headers.append("$\\sigma_{}$".format(i + 1))
+        data.append(np.std(_set))
 
     es = abs(ss_between / ss_total)
-    _result = {
-        "F" : stat,
-        "p" : p,
-        "$\\eta^2$" : es,
-    }
-    result.update(_result)
-    return result, p, es,stat
+    headers += ['F', 'p', "$\\eta^2$"]
+    data += [stat, p , es]
+    return data, headers, stat, p, es
 
 
 def chi2(ct):
     ct = np.array(ct)
     stat, p, dff, exp = sp.stats.chi2_contingency(ct)
     cramerv = abs(np.sqrt((stat / ct.sum()) / (min(ct.shape) - 1)))
-    result = {
-        "$\\chi^2$" : stat,
-        "p" : p,
-        "$V_c$" : cramerv
-    }
-    return result, p, cramerv,stat
+    headers = [
+        "$\\chi^2$",
+        "p",
+        "$V_c$",
+    ]
+    data = [
+        stat,
+        p,
+        cramerv
+    ]
+    return data, headers, stat, p, cramerv
 
 
 def ttest(ct1, ct2):
@@ -293,16 +315,25 @@ def ttest(ct1, ct2):
     dm = ct1.mean() - ct2.mean()
     pooled_std = np.sqrt(((len(ct1) - 1) * np.var(ct1) + (len(ct2) - 1) * np.var(ct2)) / (len(ct1) + len(ct2) - 2))
     es = abs(dm / pooled_std)
-    result = {
-        "$\\overline{x_1}$" : np.mean(ct1),
-        "$\\sigma_1$" : np.std(ct1),
-        "$\\overline{x_2}$" : np.mean(ct2),
-        "$\\sigma_2$" : np.std(ct2),
-        "T" : stat,
-        "p" : p,
-        "dCohena" : es,
-    }
-    return result, p, es,stat
+    headers = [
+        "$\\overline{x_1}$",
+        "$\\sigma_1$",
+        "$\\overline{x_2}$",
+        "$\\sigma_2$",
+        "T",
+        "p",
+        "dCohena",
+    ]
+    data = [
+        np.mean(ct1),
+        np.std(ct1),
+        np.mean(ct2),
+        np.std(ct2),
+        stat,
+        p,
+        es,
+    ]
+    return data, headers, stat, p, es
 
 
 def mannwhitneyu(ct1, ct2):
@@ -311,16 +342,25 @@ def mannwhitneyu(ct1, ct2):
     stat, p = sp.stats.mannwhitneyu(ct1, ct2)
     # es = stat / (len(ct1 * ct2))
     es = abs((2 * stat) / (len(ct1) * len(ct2)) - 1)  # cliff delta d
-    result = {
-        "$Q_1$" : np.median(ct1),
-        "$IRQ_1$" : np.percentile(ct1, 75) - np.percentile(ct1, 25),
-        "$Q_2$" : np.median(ct2),
-        "$IRQ_2$" : np.percentile(ct2, 75) - np.percentile(ct2, 25),
-        "Z" : stat,
-        "p" : p,
-        "$\\eta^2$" : es,
-    }
-    return result, p , es, stat
+    headers = [
+        "$Q_1$",
+        "$IRQ_1$",
+        "$Q_2$",
+        "$IRQ_2$",
+        "Z",
+        "p",
+        "$\\eta^2$",
+    ]
+    data = [
+        np.median(ct1),
+        np.percentile(ct1, 75) - np.percentile(ct1, 25),
+        np.median(ct2),
+        np.percentile(ct2, 75) - np.percentile(ct2, 25),
+        stat,
+        p,
+        es,
+    ]
+    return data, headers, stat, p, es
 
 
 def kruskal(*ct):
@@ -329,19 +369,20 @@ def kruskal(*ct):
     stat, p = sp.stats.kruskal(*ct)
     n = sum([len(i) for i in ct])
 
-    result = {}
+    data = []
+    headers = []
     for i, _set in enumerate(ct):
-        result["$Q_{}$".format(i + 1)] = np.median(_set)
-        result["$IRQ_{}$".format(i + 1)] = np.percentile(_set, 75) - np.percentile(_set, 25)
+
+        headers.append("$Q_{}$".format(i + 1))
+        data.append(np.median(_set))
+        headers.append("$IRQ_{}$".format(i + 1))
+        data.append(np.percentile(_set, 75) - np.percentile(_set, 25))
 
     es = abs(stat / ((n**2 - 1) / (n + 1)))
-    _result = {
-        "Z" : stat,
-        "p" : p,
-        "$\\eta^2$" : es,
-    }
-    result.update(_result)
-    return result, p, es, stat
+    headers += ['Z', 'p', "$\\eta^2$"]
+    data += [stat, p, es]
+
+    return data, headers, stat, p, es
 
 
 def get_power(cat=10, effect_scale=0.01, a=0.05, lx=30, max_p=0.8):

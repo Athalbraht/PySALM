@@ -64,7 +64,11 @@ class TeXbuilder():
         if kind:
             template = read_file(self.templates[kind])
             for constant, _content in payload.items():
-                template = template.replace(constant, _content)
+                try:
+                    template = template.replace(constant, _content)
+                except:
+                    import pdb
+                    pdb.set_trace()
             # payload = "{}\n{}".format(self.preload_alias, template)
             if payload['%%LOC'] == 'pre':
                 loc = "%%PRE{}".format(last_section)

@@ -6,24 +6,29 @@ from pandas import DataFrame
 from subprocess import check_output
 from ai import Responses
 from typing import Callable
-from stats import get_power
+from stats import get_power, make_stat
 
 from addons import fm
 from commands import (CommandTemplate, FileCommand, DescTableCommand, DescCommand, CustomCommand,
                       CountTableCommand, CrossTableCommand, ExpandTableCommand, PowerTableCommand,
                       PowerPlotCommand, StatTestCommand, StatCorrCommand, PlotCommand, QueryCommand,
-                      UnsupportedCommand)
-from conf import structure, tex_config
+                      UnsupportedCommand, AutoStatCommand, CorrCommand)
+from conf import structure, tex_config, tests_tab, corr_tab
 from texbuilder import TeXbuilder
+
+
+
+
 
 
 class CommandManager():
     """Loader class."""
 
-    def __init__(self, responses: Responses, data : DataFrame, ai):
+    def __init__(self, responses: Responses, data : DataFrame, ai, powers):
         self.df = data
         self.ai = ai
-        self.powers = get_power()
+
+        self.powers = powers
         self.commands : list[CommandTemplate] = []
         self.queue : list[CommandTemplate] = []
         self.last_id : int = 0
@@ -38,6 +43,8 @@ class CommandManager():
             'gen' : {
                 'desc' : DescCommand,
                 'powertable': PowerTableCommand,
+                'autostatable': AutoStatCommand,
+                'corrtable': CorrCommand,
                 'desctable': DescTableCommand,
                 'counttable': CountTableCommand,
                 'crosstable': CrossTableCommand,
@@ -107,7 +114,7 @@ class CommandManager():
     def execute_queue(self):
         print("\t- Executing analysis command")
         with progressbar(self.queue) as bar:
-       
+
             for command in bar:
                 try:
                     print("\t\t- Executing command: {}: ".format(command.id), end='')
@@ -128,7 +135,8 @@ class Analysis:
         self.ai = AI()
         self.responses : Responses = Responses.init(tex_config['responses_file'])
         self.df = data
-        self.command_manager : CommandManager = CommandManager(self.responses, self.df, self.ai)
+        self.powers = get_power()
+        self.command_manager : CommandManager = CommandManager(self.responses, self.df, self.ai, self.powers)
         self.document : TeXbuilder = TeXbuilder("Report", config=tex_config, init=True)
         self.create_folders()
 
@@ -143,7 +151,7 @@ class Analysis:
             print(fm('Done'))
 
     def register_commands(self):
-        self.structure = structure(self.command_manager)
+        self.structure = structure(self.command_manager, self.df, make_stat, self.powers)
 
     def create_table_of_content(self):
         """Wrap tex build."""

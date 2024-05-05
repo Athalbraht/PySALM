@@ -201,6 +201,22 @@ class DescCommand(CommandTemplate):
         self.apply_payload(desc)
 
 
+class CorrCommand(CommandTemplate):
+    def execute(self):
+        table, desc = tables.corrtab(self.ctx)
+        self.calculated = True
+        self.responses.update_desc(self.alias, desc)
+        self.apply_payload(table)
+
+
+class AutoStatCommand(CommandTemplate):
+    def execute(self):
+        table, desc = tables.stattab(self.ctx)
+        self.calculated = True
+        self.responses.update_desc(self.alias, desc)
+        self.apply_payload(table)
+
+
 class PowerPlotCommand(CommandTemplate):
     def execute(self):
         path, desc, caption = plot_power()

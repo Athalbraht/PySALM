@@ -5,6 +5,22 @@ from addons import fix_desc
 from conf import tab_path
 
 
+def corrtab(tab, ):
+    tab = tab.round(3).astype(str)
+    content = fix_desc(tab.to_latex(
+        caption="Korelacja", position='h!'))
+    prompt = " "
+    return content, prompt
+
+
+def stattab(tab, ):
+    tab = tab.round(3).astype(str)
+    content = fix_desc(tab.to_latex(index=False,
+                                    caption="Statystyka", position='h!'))
+    prompt = " "
+    return content, prompt
+
+
 def desctable(data):
     tab = data.describe().round(1).astype(str)
     col = tab.columns
@@ -25,18 +41,6 @@ def powertable(powertab):
         caption="Minimalna wielkość próby dla testu statystycznego o określonych stopniach swobody (kategorii).", position='h!'))
     prompt = "Tabela przedstawia minimalną wielkość próby dla testu o mocy powyżej 0.8 dla różnych ilości kategorii (stopni swobody)."
     return content, prompt
-
-
-def crosstab(data, col):
-    """Generate list of count table for specific entry and crosstables if crosstab specified."""
-    if isinstance(col, list):
-        pass
-    else:
-        tab = (pd.crosstab(data[col], data[col], margins=True, normalize=True) * 100).round(1)
-    tab = (tab.astype(str) + "%").to_latex(
-        caption="Tabela krzyżowa zależności {} między {}".format(col, crosstab), label="crosstab:{}-{}"
-        .format(name, aliases[i]), position="h!")
-    return content
 
 
 def expandtable(data, col):
