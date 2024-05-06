@@ -3,6 +3,8 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import statsmodels.stats.power as smp
+from stats import r2
+import scipy as sp
 from click import style
 from pandas import DataFrame
 
@@ -91,14 +93,29 @@ def plot(data, pset, alias, labels=[False, False], **conf):
             }
             kwargs.update(conf)
             g = sns.jointplot(data, x=x, y=y, **kwargs)
+            r, p = sp.stats.pearsonr(data[x], data[y])
+            rr = round(r2(data[x], data[y]), 3)
+            g.ax_joint.annotate('$R^2 = {}$'.format(rr),
+                                xy=(0.1, 0.7), xycoords='axes fraction',
+                                ha='left', va='center',
+                                bbox={'boxstyle': 'round', 'fc': 'white', 'ec': 'navy'})
+            # bbox={'boxstyle': 'round', 'fc': 'powderblue', 'ec': 'navy'})
+            g.ax_joint.annotate(f'$\\rho = {r:.3f}, p = {p:.3f}$',
+                                xy=(0.1, 0.9), xycoords='axes fraction',
+                                ha='left', va='center',
+                                bbox={'boxstyle': 'round', 'fc': 'white', 'ec': 'navy'})
+            # bbox={'boxstyle': 'round', 'fc': 'powderblue', 'ec': 'navy'})
+            g.fig.set_figwidth(14)
+            g.fig.set_figheight(8)
+
             caption = 'Rozkład zmiennych {} i {}'.format(x, y)
             # TODO REGRESSION PARAMS
     else:
         print("\t\t{}".format(style("Unknown plot type {}".format(validator), fg="red")))
         return None
-    #if labels[0] and validator != 'qq':
+    # if labels[0] and validator != 'qq':
      #   g.set_xlabel(labels[0])
-    #if labels[1] and validator != 'qq':
+    # if labels[1] and validator != 'qq':
     #    g.set_ylabel(labels[1])
     filename = alias + pic_ext
     path = os.path.join(tex_config['folder'], 'pics', filename)

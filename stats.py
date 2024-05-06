@@ -5,22 +5,26 @@ from addons import fm
 from click import style
 from pandas import DataFrame, crosstab
 
+from tables import eff
 from conf import crv, pval, tests_tab, corr_tab, tex_config, type_dict
 
 
-def make_stat(comm, df, c1, c2, power, mode='safe'):
+def make_stat(comm, df, c1, c2, power, mode='safe', passed=False):
     ddf, cr = auto_test(df, c1, c2, type_dict, power)
+    if passed:
+        ddf = ddf[(ddf['p'] < 0.05)]
+
     tables = tests_tab(ddf)
     corr = corr_tab(cr)
     commands = []
     id = "{}-{}".format(c1[0], c2[0])
     for tab in tables:
         if len(tab) > 0:
-            commands.append(comm.register('gen', 'autostatable', tab, mode=mode, alias=id + "A"))
+            commands.append(comm.register('gen', 'autostatable', tab, mode='reload', alias=id + "A"))
             commands.append(comm.register('gendesc', 'desc', id + "A", mode=mode, alias=id + "B"))
 
     if len(corr) > 0:
-        commands.append(comm.register('gen', 'corrtable', corr, mode=mode, alias=id + "C"))
+        commands.append(comm.register('gen', 'corrtable', corr, mode='reload', alias=id + "C"))
         commands.append(comm.register('gendesc', 'desc', id + "C", mode=mode, alias=id + "CC"))
     return commands
 
@@ -33,26 +37,26 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
             'ind': {
                 '2' : {
                     'n': {
-                        'norm' : [chi2, 'chi2', '$\\chi^2$'],
+                        'norm' : [chi2, 'chi2', '$\\chi^2$', 'chi2'],
                     },
                     'o': {
-                        'norm' : [mannwhitneyu, "T", "Manna-Whitneya"],
+                        'norm' : [mannwhitneyu, "F", "Manna-Whitneya", 'n'],
                     },
                     'q': {
-                        'norm': [ttest, "T", 'T'],
-                        'rm': [mannwhitneyu, "T", "Manna-Whitneya"],
+                        'norm': [ttest, "F", 'T', 'n'],
+                        'rm': [mannwhitneyu, "F", "Manna-Whitneya", 'n'],
                     },
                 },
                 '3': {
                     'n': {
-                        'norm' : [chi2, "chi2", "$\\chi^2$"],
+                        'norm' : [chi2, "chi2", "$\\chi^2$", 'chi2'],
                     },
                     'o': {
-                        'norm' : [kruskal, "T", 'Kruskal-Wallis'],
+                        'norm' : [kruskal, "F", 'Kruskal-Wallis', 'n'],
                     },
                     'q': {
-                        'norm': [anova, "F", "ANOVA"],
-                        'rm': [kruskal, "T", "Kruskala-Wallisa"],
+                        'norm': [anova, "F", "ANOVA", 'n'],
+                        'rm': [kruskal, "F", "Kruskala-Wallisa", 'n'],
                     },
                 },
             },
@@ -97,6 +101,7 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
         'p' : [],
         'tname' : [],
         'stat' : [],
+        'efekt' : [],
     }
 
     def type_detect(x):
@@ -128,10 +133,10 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
                 vtype = type_detect(_values)
                 tdata = data[[_groups, _values]]
                 sub = 'norm'
-                if gtype == 'n':
+                if gtype == 'n' or gtype == 'o':
                     if vtype in ['q', 'o']:
                         gsize = tdata.groupby(_groups).count()
-                        fixed_col = fix_size(gsize)
+                        fixed_col = fix_size(gsize, test_type='F')
                         tdata = tdata[tdata[_groups].isin(fixed_col)]
                         data_list = [tdata[tdata[_groups] == cat][_values] for cat in fixed_col]
                         if vtype == 'q':
@@ -163,12 +168,13 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
 
                     ttype = struct[sub][1]
                     tname = struct[sub][2]
-                    result, dd, p, ef, stat = struct[sub][0](*data_list)
+                    result, dd, stat, p, ef = struct[sub][0](*data_list)
+                    eff_type = struct[sub][3]
                     _pass = False
                     if p < 0.05:
                         _pass = True
 
-                    df.loc[len(df) + 1] = [_groups, _values, ttype, result, dd, fixed_col, _pass, ef, p, tname, stat]
+                    df.loc[len(df) + 1] = [_groups, _values, ttype, result, dd, fixed_col, _pass, ef, p, tname, stat, eff(ef, eff_type)]
                     corr_values.append(_values)
                 elif gtype == 'q':
                     group_q.append(gtype)
@@ -179,12 +185,13 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
                 print("- {} in {} {}\n{}".format(fm('Error', "red"), _groups, _values, e))
     print('- Calculating correlations')
     df_corr = DataFrame({
-        "group" : [],
-        'value' : [],
-        'corr' : [],
+        "grupa" : [],
+        'wartość' : [],
+        'Corr.' : [],
         'p' : [],
         'method' : [],
         'result' : [],
+        'efekt' : [],
     })
 
     if debug_corr:
@@ -201,7 +208,7 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
                 if gtype == 'q' and vtype == 'q':
                     corr, p = pearson(gr, vl)
                     print('calc pearson')
-                    df_corr.loc[len(df_corr) + 1] = [group, value, corr['rPearson'], p, 'R-Pearson', corr]
+                    df_corr.loc[len(df_corr) + 1] = [group, value, corr['rPearson'], p, 'R-Pearson', corr, eff(corr['rPearson'], 'corr')]
                 elif gtype != 'n' and vtype != 'n' and gtype != 'multi' and vtype != 'multi':
                     if vtype == 'o':
                         vl = vl.apply(lambda x: int(str(x).split('.')[0]))
@@ -209,7 +216,7 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
                         gr = gr.apply(lambda x: int(str(x).split('.')[0]))
                     print('calc spearman')
                     corr, p = spearman(gr, vl)
-                    df_corr.loc[len(df_corr) + 1] = [group, value, corr['rSpearman'], p, 'R-Spearman', corr]
+                    df_corr.loc[len(df_corr) + 1] = [group, value, corr['rSpearman'], p, 'R-Spearman', corr, eff(corr['rSpearman'], 'corr')]
             except Exception as e:
                 print('Error {} {}'.format(group, value))
                 print(e)
@@ -397,8 +404,13 @@ def get_power(cat=10, effect_scale=0.01, a=0.05, lx=30, max_p=0.8):
     for c in range(1, cat):
         for e in np.linspace(max_p - effect_scale, max_p + effect_scale, 10):
             for xx in range(1, lx):
-                #adf.loc[len(df) + 1] = ['chi2', c, e, smp.GofChisquarePower().solve_power(effect_size=e, nobs=xx, alpha=a, n_bins=c), xx, a]
-                df.loc[len(df) + 1] = ['F i T', c, e, smp.GofChisquarePower().solve_power(effect_size=e, nobs=xx, alpha=a, n_bins=c), xx, a]
+                df.loc[len(df) + 1] = ['chi2', c, e, 0.8, 5, a]
+                df.loc[len(df) + 1] = ['F', c, e, smp.FTestAnovaPower().solve_power(effect_size=e, nobs=xx, alpha=a, k_groups=c), xx, a]
+                if c <= 2:
+                    df.loc[len(df) + 1] = ['T', c, e, smp.TTestPower().solve_power(effect_size=e, nobs=xx, alpha=a), xx, a]
+                else:
+                    df.loc[len(df) + 1] = ['T', c, e, 0, xx, a]
+
     df.dropna(inplace=True)
     df['Wielkość próby'] = df['Wielkość próby'].astype(int)
     df['Liczba kategorii'] = df['Liczba kategorii'].astype(int)
@@ -410,6 +422,15 @@ def get_power(cat=10, effect_scale=0.01, a=0.05, lx=30, max_p=0.8):
 def cramer_V(ct, chi2):
     cramerv = np.sqrt((chi2 / ct.sum()) / (min(ct.shape) - 1))
     return cramerv
+
+
+def r2(X, y):
+    y_mean = np.mean(y)
+    m, c = np.polyfit(X, y, 1)
+    y_pred = m * X + c
+    SSE = np.sum((y - y_pred) ** 2)
+    SST = np.sum((y - y_mean) ** 2)
+    return 1 - (SSE / SST)
 
 
 def chi_ind(data, question, group):

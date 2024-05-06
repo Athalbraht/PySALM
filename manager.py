@@ -72,7 +72,9 @@ class CommandManager():
         self.last_id += 1
         return self.last_id
 
-    def register(self, flg: str, kind: str, ctx: str, silent=False, mode: str = 'static', paraphrase: bool = False, loc: str = 'inline', alias='NoName', *args, **kwargs) -> None:
+    def register(self, flg: str, kind: str, ctx: str, silent=False, mode: str = 'global', paraphrase: bool = False, loc: str = 'inline', alias='NoName', *args, **kwargs) -> None:
+        if mode == 'global':
+            mode = tex_config['ai']['mode']
         print("\t- Registering {} as {} for {} in {} mode p{}".format(
             fm(kind),
             fm(flg, 'yellow'),

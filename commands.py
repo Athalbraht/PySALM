@@ -101,12 +101,17 @@ class CommandTemplate(Protocol):
             else:
                 self.payload[tex_config["payload_alias"]] = response
 
+        elif mode == 'reload':
+            self.update_response(payload)
+            self.payload[tex_config["payload_alias"]] = payload
+
         elif mode == 'uniqe':
             if self.paraphrase:
                 pass  # SEND TO AI
                 self.responses.paraphrased(self.alias, True)
             # response = self.responses.get_response(self.alias)
-            payload = self.ai.request(payload)
+            if self.kind == 'desc':
+                payload = self.ai.request(payload)
             self.update_response(payload)
             self.payload[tex_config["payload_alias"]] = payload
 
