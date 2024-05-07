@@ -9,7 +9,7 @@ from tables import eff
 from conf import crv, pval, tests_tab, corr_tab, tex_config, type_dict
 
 
-def make_stat(comm, df, c1, c2, power, mode='safe', passed=False):
+def make_stat(comm, df, c1, c2, power, mode='safe', passed=True):
     ddf, cr = auto_test(df, c1, c2, type_dict, power)
     if passed:
         ddf = ddf[(ddf['p'] < 0.05)]
@@ -185,13 +185,13 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
                 print("- {} in {} {}\n{}".format(fm('Error', "red"), _groups, _values, e))
     print('- Calculating correlations')
     df_corr = DataFrame({
-        "grupa" : [],
-        'wartość' : [],
-        'Corr.' : [],
+        "X" : [],
+        'Y' : [],
+        '$\\rho$' : [],
         'p' : [],
         'method' : [],
         'result' : [],
-        'efekt' : [],
+        'Skala efektu' : [],
     })
 
     if debug_corr:
@@ -259,6 +259,14 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
 # nn Test Cochrana
 # oo  Friedemana + w
 # qq analiza wariacji wew /  Friedemana
+
+
+def chi3(values, v=False):
+    chi, p = sp.stats.chisquare(values)
+    if v:
+        return chi, p, "$\\chi^2={};\\rho={}$".format(chi.round(2), p.round(2))
+    else:
+        return p
 
 
 def spearman(ct1, ct2):

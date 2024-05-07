@@ -30,6 +30,8 @@ def plot_power(cat=10, effect_size=[0.5, 0.99], a=0.05, lx=30, max_p=0.8, alias=
 
     g = sns.relplot(data=df, x='Wielkość próby', y="Moc testu", kind='line', hue='Liczba kategorii')
     g.axes[0][0].axhline(max_p, df['Wielkość próby'].min(), df['Wielkość próby'].max(), alpha=0.3, linestyle='--', c='black')
+    g.fig.set_figwidth(14)
+    g.fig.set_figheight(8)
     c = df[(df['Moc testu'] > 0.79) & (df['Moc testu'] < 0.81)].groupby('Liczba kategorii').mean().astype(int)['Wielkość próby']
     for cc in c.index:
         g.axes[0][0].axvline(c[cc], 0, 1, alpha=0.3, linestyle='--', c='black')
@@ -61,17 +63,21 @@ def plot(data, pset, alias, labels=[False, False], **conf):
             }
             kwargs.update(conf)
             g = sns.catplot(data, x=x, **kwargs)
+            g.fig.set_figwidth(14)
+            g.fig.set_figheight(8)
             caption = 'Histogram dla kolumny {}'.format(x)
             labels[1] = "Procent"
         elif validator == 'q':
             kwargs = {
                 # "kde" : True,
-                "bins" : 20,
+                #a"bins" : 20,
                 "multiple" : 'stack',
                 "stat" : 'percent'
             }
             kwargs.update(conf)
-            g = sns.histplot(data, x=x, **kwargs)
+            g = sns.displot(data, x=x, **kwargs)
+            g.fig.set_figwidth(14)
+            g.fig.set_figheight(8)
             caption = 'Histogram dla kolumny {}'.format(x)
             labels[1] = "Procent"
     #####################################################################
@@ -84,10 +90,12 @@ def plot(data, pset, alias, labels=[False, False], **conf):
             kwargs.update(sns_api)
             g = sns.catplot(data, x=x, y=y, **kwargs)
             caption = 'Rozkład zmiennych {} i {}'.format(x, y)
+            g.fig.set_figwidth(14)
+            g.fig.set_figheight(8)
         elif validator == 'qq':
             kwargs = {
                 "marker" : '+',
-                "color" : 'black',
+                #"color" : 'black',
                 "marginal_kws" : dict(bins=15),
                 "kind" : 'reg',
             }

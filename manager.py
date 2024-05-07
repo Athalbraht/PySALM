@@ -17,8 +17,16 @@ from conf import structure, tex_config, tests_tab, corr_tab
 from texbuilder import TeXbuilder
 
 
-
-
+def tex_list(items, tp='enumerate'):
+    template = """
+    \\begin{{tp}}
+        {con}
+    \\end{{tp}}
+    """
+    content = ""
+    for item in items:
+        content += "\\item {}\n".format(item)
+    return template.format(tp=tp, con=content)
 
 
 class CommandManager():
@@ -33,6 +41,7 @@ class CommandManager():
         self.queue : list[CommandTemplate] = []
         self.last_id : int = 0
         self.responses = responses
+        self.summary = []
         self.command_map = {
             'file' : {
                 'desc' : FileCommand,
@@ -73,16 +82,17 @@ class CommandManager():
         return self.last_id
 
     def register(self, flg: str, kind: str, ctx: str, silent=False, mode: str = 'global', paraphrase: bool = False, loc: str = 'inline', alias='NoName', *args, **kwargs) -> None:
+        orderID = self.create_id()
         if mode == 'global':
             mode = tex_config['ai']['mode']
-        print("\t- Registering {} as {} for {} in {} mode p{}".format(
+        print("\t- Registering {}: {} as {} for {} in {} mode p{}".format(
+            orderID,
             fm(kind),
             fm(flg, 'yellow'),
             fm(ctx, 'cyan'),
             fm(mode, 'red'),
             fm(paraphrase),
         ))
-        orderID = self.create_id()
         # runtime_data =   TODO
         params = {
             "id" : orderID,
@@ -110,7 +120,7 @@ class CommandManager():
     def create_queue(self):
         """Define priority of instructions."""
         print("\t- Sorting instructions list")
-        hierarchy = ['file', 'gen', 'load', 'static', 'gendesc']
+        hierarchy = ['file', 'gen', 'load', 'gendesc', 'static']
         self.queue = sorted(self.commands, key=lambda obj: hierarchy.index(obj.flg))
 
     def execute_queue(self):
@@ -126,6 +136,16 @@ class CommandManager():
                     print(" {}".format(e))
                 else:
                     print(fm("Pass", 'green'))
+
+    def load_summary(self, pre='',**kwargs):
+        print('- Merging summary for document')
+        with progressbar(self.commands) as bar:
+            for command in bar:
+                summ = command.summary
+                if summ:
+                    self.summary.append(summ)
+        content = tex_list(self.summary)
+        return self.register('static', 'desc', pre + content, **kwargs)
 
 
 class Analysis:

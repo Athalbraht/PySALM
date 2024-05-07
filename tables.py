@@ -1,10 +1,17 @@
 import pandas as pd
-from scipy.stats import shapiro
+from scipy.stats import shapiro,chisquare
 import numpy as np
+
 
 from addons import fix_desc
 from conf import tab_path
 
+def chi3(values, v=False):
+    chi, p = chisquare(values)
+    if v:
+        return chi, p, "$\\chi^2={};\\rho={}$".format(chi.round(2), p.round(2))
+    else:
+        return p
 
 def eff(e, tp):
     if tp == 'chi2':
@@ -41,7 +48,7 @@ def corrtab(tab, ):
     content = fix_desc(tab.to_latex(
         caption="Korelacja", position='h!'))
     prompt = " "
-    return content, prompt
+    return content, prompt,'aa'
 
 
 def stattab(tab, ):
@@ -49,7 +56,7 @@ def stattab(tab, ):
     content = fix_desc(tab.to_latex(index=False,
                                     caption="Statystyka", position='h!'))
     prompt = " "
-    return content, prompt
+    return content, prompt,'to jest isidaiwfla'
 
 
 def desctable(data):
@@ -68,7 +75,7 @@ def desctable(data):
     prompt = ""
     for cl in sel:
         prompt += "Średnia wartość {}u wynosi {} z odchyleniem standardowym {} oraz medianą {}. ".format(cl, *sel[cl])
-    return content, prompt
+    return content, prompt, 'adw'
 
 
 def powertable(powertab):
@@ -76,7 +83,7 @@ def powertable(powertab):
     content = fix_desc(powertab.to_latex(
         caption="Minimalna wielkość próby dla testu statystycznego Ti F o określonych stopniach swobody (ilości kategorii).", position='h!'))
     prompt = "Tabela przedstawia minimalną wielkość próby dla testu o mocy powyżej 0.8 dla różnych ilości kategorii (stopni swobody)."
-    return content, prompt
+    return content, prompt,'power'
 
 
 def expandtable(data, col):
@@ -86,26 +93,35 @@ def expandtable(data, col):
     content = fix_desc(tab.to_latex(
         caption="Rozkład wyborów w pytaniu '{}'.".format(col), position='h!'))
     prompt = "Tabela wyborów w pytaniu: {}. Tabela:\n{}".format(col, tab.to_markdown())
-    return content, prompt
+    return content, prompt,'Et'
 
 
 def counttable(data, col):
     """Generate list of count table for specific entry and crosstables if crosstab specified."""
-    prompt = ""
+    prompt = " "
     if isinstance(col, list):
-        tab1 = data[col].apply(pd.Series.value_counts).transpose()
+
+        tab1 = data[col].apply(pd.Series.value_counts)
+        chip = tab1.apply(chi3).round(3).astype(str)
+        tab1 = tab1.transpose()
         tab2 = "(" + (tab1 / len(data) * 100).round(1).astype(str) + "\%)"
         tab = tab1.astype(str) + " " + tab2
+        tab['$\\chi^2$'] = chip
+        content = fix_desc(tab.to_latex(
+            caption="Zestawienie ilościowe wartości w kolumnach", position='h!')
+                           )
     else:
         tab1 = data[col].value_counts()
         tab2 = (data[col].value_counts(normalize=True) * 100).round(3).astype(str) + "\%"
         tab = pd.concat([tab1, tab2], axis=1, keys=['Liczebność', "Procent"]).sort_index()
         _mc = tab1.idxmax()
         mc = tab2.max()
+        chi,p,ds = chi3(tab1,True)
         prompt = "Najczęsciej występującą wartością w tabeli {} jest '{}' ({}).".format(col, _mc, mc)
         if len(tab1.index) > 2:
             prompt += "Powmocnicza tabela:\n {}".format(tab.to_markdown())
 
-    content = fix_desc(tab.to_latex(
-        caption="Zestawienie ilościowe wartości w kolumnie {}".format(col), position='h!'))
-    return content, prompt
+        content = fix_desc(tab.to_latex(
+            caption="Zestawienie ilościowe wartości w kolumnie {}. {}".format(col,ds), position='h!')
+                           )
+    return content, prompt,''

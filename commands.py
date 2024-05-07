@@ -12,6 +12,7 @@ class CommandTemplate(Protocol):
     def __init__(self, ai, powers, id: int, flg: str, kind: str, ctx: str, silent: bool, mode: str, loc: str, paraphrase : bool,
                  data, responses : Responses, kwargs, alias : str = 'NoName'):
         self.id = id
+        self.summary = ''
         self.ai = ai
         self.df = data
         self.paraphrase = paraphrase
@@ -50,7 +51,7 @@ class CommandTemplate(Protocol):
 
     def get_payload(self):
         """Return result in tex format."""
-        print("\t\t\t- Getting payload: {}: ".format(self.ctx), end="")
+        print("\t\t\t- Getting payload: {}: ".format(self.id), end="")
         try:
             if self.calculated:
                 print(fm("Pass", "green"))
@@ -161,7 +162,8 @@ class FileCommand(CommandTemplate):
 
 class PowerTableCommand(CommandTemplate):
     def execute(self):
-        table, desc = tables.powertable(self.powers)
+        table, desc, summary = tables.powertable(self.powers)
+        self.summary = summary
         self.calculated = True
         self.responses.update_desc(self.alias, desc)
         self.apply_payload(table)
@@ -169,7 +171,8 @@ class PowerTableCommand(CommandTemplate):
 
 class DescTableCommand(CommandTemplate):
     def execute(self):
-        table, desc = tables.desctable(self.df[self.ctx])
+        table, desc, summary = tables.desctable(self.df[self.ctx])
+        self.summary = summary
         self.calculated = True
         self.responses.update_desc(self.alias, desc)
         self.apply_payload(table)
@@ -177,7 +180,8 @@ class DescTableCommand(CommandTemplate):
 
 class ExpandTableCommand(CommandTemplate):
     def execute(self):
-        table, desc = tables.expandtable(self.df, self.ctx)
+        table, desc, summary = tables.expandtable(self.df, self.ctx)
+        self.summary = summary
         self.calculated = True
         self.responses.update_desc(self.alias, desc)
         self.apply_payload(table)
@@ -185,7 +189,8 @@ class ExpandTableCommand(CommandTemplate):
 
 class CountTableCommand(CommandTemplate):
     def execute(self):
-        table, desc = tables.counttable(self.df, self.ctx)
+        table, desc, summary = tables.counttable(self.df, self.ctx)
+        self.summary = summary
         self.calculated = True
         self.responses.update_desc(self.alias, desc)
         self.apply_payload(table)
@@ -193,7 +198,8 @@ class CountTableCommand(CommandTemplate):
 
 class CrossTableCommand(CommandTemplate):
     def execute(self):
-        table, desc = tables.desctable(self.df[self.ctx])
+        table, desc, summary = tables.desctable(self.df[self.ctx])
+        self.summary = summary
         self.calculated = True
         self.responses.update_desc(self.alias, desc)
         self.apply_payload(table)
@@ -208,7 +214,8 @@ class DescCommand(CommandTemplate):
 
 class CorrCommand(CommandTemplate):
     def execute(self):
-        table, desc = tables.corrtab(self.ctx)
+        table, desc, summary = tables.corrtab(self.ctx)
+        self.summary = summary
         self.calculated = True
         self.responses.update_desc(self.alias, desc)
         self.apply_payload(table)
@@ -216,7 +223,8 @@ class CorrCommand(CommandTemplate):
 
 class AutoStatCommand(CommandTemplate):
     def execute(self):
-        table, desc = tables.stattab(self.ctx)
+        table, desc, summary = tables.stattab(self.ctx)
+        self.summary = summary
         self.calculated = True
         self.responses.update_desc(self.alias, desc)
         self.apply_payload(table)

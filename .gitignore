@@ -4,5 +4,5 @@
 **cache**
 *.env*
 report
-data
+*data*
 venv/
