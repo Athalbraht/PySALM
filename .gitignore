@@ -3,5 +3,10 @@
 **cache**
 *.env*
 report
-data
+*data*
 venv/
+
+## DataFormats
+*.csv
+*.pickle
+*.xlsx
