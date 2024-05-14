@@ -44,7 +44,7 @@ class TeXbuilder():
         if not queue:
             queue = self.sections
         for section, subsections in queue.items():
-            section_name = "\{}section{{{}}}\n\n{}\n\quad\n{}".format('sub' * subsections.depth, section,
+            section_name = "\FloatBarrier\n\n\{}section{{{}}}\n\n{}\n\quad\n{}".format('sub' * subsections.depth, section,
                                                                        "%%PRE{}".format(section),
                                                                        self.postload_alias)
             self._update_doc(section_name)

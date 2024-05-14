@@ -8,9 +8,21 @@ from conf import tex_config
 from plotting import plot, plot_power
 
 
+def tex_list(items, tp='enumerate'):
+    template = """
+    \\begin{{enumerate}}
+        {con}
+    \\end{{enumerate}}
+    """
+    content = ""
+    for item in items:
+        content += "\\item {}\n".format(item)
+    return template.format(con=content)
+
+
 class CommandTemplate(Protocol):
     def __init__(self, ai, powers, id: int, flg: str, kind: str, ctx: str, silent: bool, mode: str, loc: str, paraphrase : bool,
-                 data, responses : Responses, kwargs, alias : str = 'NoName'):
+                 data, responses : Responses, kwargs, alias : str = 'NoName', comm=[]):
         self.id = id
         self.summary = ''
         self.ai = ai
@@ -19,6 +31,7 @@ class CommandTemplate(Protocol):
         self.flg = flg
         self.kind = kind
         self.silent = silent
+        self.commands = comm
         self.ctx = ctx
         self.powers = powers
         self.mode = mode
@@ -256,6 +269,22 @@ class CustomCommand(CommandTemplate):
     def execute(self):
         self.calculated = True
         self.payload[tex_config["payload_alias"]] = self.ctx
+
+
+class SummaryCommand(CommandTemplate):
+    def execute(self):
+        content = self.load_summary(self.ctx)
+        self.calculated = True
+        self.apply_payload(content)
+
+    def load_summary(self, pre='', **kwargs):
+        print('- Merging summary for document')
+        summary = []
+        for command in self.commands:
+            summ = command.summary
+            if summ:
+                summary.append(summ)
+        return pre + tex_list(summary)
 
 
 class QueryCommand(CommandTemplate):

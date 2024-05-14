@@ -9,23 +9,25 @@ from tables import eff
 from conf import crv, pval, tests_tab, corr_tab, tex_config, type_dict
 
 
-def make_stat(comm, df, c1, c2, power, mode='safe', passed=True):
+def make_stat(comm, df, c1, c2, power, mode='safe', passed=True,verb=True):
     ddf, cr = auto_test(df, c1, c2, type_dict, power)
     if passed:
         ddf = ddf[(ddf['p'] < 0.05)]
 
-    tables = tests_tab(ddf)
+    tables,pm = tests_tab(ddf)
     corr = corr_tab(cr)
     commands = []
     id = "{}-{}".format(c1[0], c2[0])
-    for tab in tables:
+    for i,tab in enumerate(tables):
         if len(tab) > 0:
-            commands.append(comm.register('gen', 'autostatable', tab, mode='reload', alias=id + "A"))
-            commands.append(comm.register('gendesc', 'desc', id + "A", mode=mode, alias=id + "B"))
+            commands.append(comm.register('gen', 'autostatable', [tab,pm[i]], mode='reload', alias=id + "A"))
+            if verb:
+                commands.append(comm.register('gendesc', 'desc', id + "A", mode=mode, alias=id + "B"))
 
     if len(corr) > 0:
         commands.append(comm.register('gen', 'corrtable', corr, mode='reload', alias=id + "C"))
-        commands.append(comm.register('gendesc', 'desc', id + "C", mode=mode, alias=id + "CC"))
+        if verb:
+            commands.append(comm.register('gendesc', 'desc', id + "C", mode=mode, alias=id + "CC"))
     return commands
 
 

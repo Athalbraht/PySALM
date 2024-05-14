@@ -12,21 +12,11 @@ from addons import fm
 from commands import (CommandTemplate, FileCommand, DescTableCommand, DescCommand, CustomCommand,
                       CountTableCommand, CrossTableCommand, ExpandTableCommand, PowerTableCommand,
                       PowerPlotCommand, StatTestCommand, StatCorrCommand, PlotCommand, QueryCommand,
-                      UnsupportedCommand, AutoStatCommand, CorrCommand)
+                      UnsupportedCommand, AutoStatCommand, CorrCommand, SummaryCommand)
 from conf import structure, tex_config, tests_tab, corr_tab
 from texbuilder import TeXbuilder
 
 
-def tex_list(items, tp='enumerate'):
-    template = """
-    \\begin{{tp}}
-        {con}
-    \\end{{tp}}
-    """
-    content = ""
-    for item in items:
-        content += "\\item {}\n".format(item)
-    return template.format(tp=tp, con=content)
 
 
 class CommandManager():
@@ -74,7 +64,10 @@ class CommandManager():
             },
             'static' : {
                 'desc' : CustomCommand,
-            }
+            },
+            'summary' : {
+                'desc' : SummaryCommand,
+                }
         }
 
     def create_id(self):
@@ -111,16 +104,20 @@ class CommandManager():
             "responses" : self.responses,
         }
 
-        # SET METHOD TODO
+        if flg == 'summary':
+            command : CommandTemplate = self.command_map[flg][kind](comm=self.commands, **params)
+        else:
+            command : CommandTemplate = self.command_map[flg][kind](**params)
 
-        command : CommandTemplate = self.command_map[flg][kind](**params)
+
+
         self.commands.append(command)
         return command
 
     def create_queue(self):
         """Define priority of instructions."""
         print("\t- Sorting instructions list")
-        hierarchy = ['file', 'gen', 'load', 'gendesc', 'static']
+        hierarchy = ['file', 'gen', 'load', 'gendesc', 'static', 'summary']
         self.queue = sorted(self.commands, key=lambda obj: hierarchy.index(obj.flg))
 
     def execute_queue(self):
@@ -137,15 +134,6 @@ class CommandManager():
                 else:
                     print(fm("Pass", 'green'))
 
-    def load_summary(self, pre='',**kwargs):
-        print('- Merging summary for document')
-        with progressbar(self.commands) as bar:
-            for command in bar:
-                summ = command.summary
-                if summ:
-                    self.summary.append(summ)
-        content = tex_list(self.summary)
-        return self.register('static', 'desc', pre + content, **kwargs)
 
 
 class Analysis:
