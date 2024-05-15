@@ -6,6 +6,7 @@ import numpy as np
 from addons import fix_desc
 from conf import tab_path
 
+
 def split_sentence(text, n=40):
     lines = []
     curr_line = []
@@ -83,8 +84,10 @@ def desctable(data):
         shapiro_col[c] = str(round(shapiro(data[c])[1], 3))
     shapiro_df = pd.DataFrame(shapiro_col, index=(['$\\rho$']))
     tab = pd.concat([tab, shapiro_df]).transpose()
+    tab.index = [split_sentence(idx, 35) for idx in list(tab.index)]
+    tab['count'] = tab['count'].astype(float).astype(int)
     content = fix_desc(tab.to_latex(
-        caption="Statystyki opisowe danych metrycznych, $\overline{x}$ - średnia, $\sigma$ - odchylenie standardowe, min i max - wartości minimalne i maksymalne, $Q_1$, $Q_2$, $Q_3$ - kwartyl dolny, środkowy oraz górny, $N$ - liczba badanych. $p$ jest wynikiem testu Shapiro-Wilka.",
+        caption=("Statystyki opisowe, $\overline{x}$ - średnia, $\sigma$ - odchylenie standardowe, min i max - wartości minimalne i maksymalne, $Q_1$, $Q_2$, $Q_3$ - kwartyl dolny, środkowy oraz górny, $N$ - liczba badanych. $p$ jest wynikiem testu Shapiro-Wilka.", "Statystyki opisowe"),
         position='h!'))
     sel = ttab.loc[['mean', 'std', '50%']]
     prompt = ""
@@ -106,11 +109,12 @@ def expandtable(data, col):
         data[col] = data[col].dropna().apply(lambda x: eval(x))
     except:
         pass
+    n = len(data[col].dropna())
     tab1 = data[col].explode().value_counts()
     tab_s = (data[col].explode().value_counts(normalize=True).cumsum() * 100).round(1).astype(str) + "%"
     tab2 = (tab1 / len(data) * 100).round(1).astype(str) + "%"
-    tab = pd.concat([tab1, tab2, tab_s], axis=1, keys=['Ilość', "Częstość wyboru", "Suma"])
-    tab.index = [ split_sentence(idx) for idx in list(tab.index) ]
+    tab = pd.concat([tab1, tab2, tab_s], axis=1, keys=[f'Ilość ($n={n}$)', "Częstość wyboru", "Suma"])
+    tab.index = [split_sentence(idx) for idx in list(tab.index)]
     content = fix_desc(tab.to_latex(
         caption="Rozkład wyborów w pytaniu '{}'.".format(col), position='h!'))
     prompt = "Tabela wyborów w pytaniu: {}. Tabela:\n{}".format(col, tab.to_markdown())
@@ -126,7 +130,7 @@ def counttable(data, col):
         chip = tab1.apply(chi3).round(3).astype(str)
         chip2 = tab1.transpose().apply(chi3).round(3).astype(str)
         chip2['p'] = '-'
-        #tab1['p ($\\chi^2$)'] = chip2
+        # tab1['p ($\\chi^2$)'] = chip2
         tab1 = tab1.transpose()
         tab2 = "(" + (_tab1 / len(data) * 100).round(1).astype(str) + "%)"
         tab = tab1.astype(str) + " " + tab2.transpose()
@@ -135,14 +139,15 @@ def counttable(data, col):
         tab['p ($\\chi^2$)'] = chip2
         tab = tab.transpose()
         tab = tab.replace(np.nan, '-')
-        tab.index = [ split_sentence(idx) for idx in list(tab.index) ]
+        tab.index = [split_sentence(idx) for idx in list(tab.index)]
         content = fix_desc(tab.to_latex(
-            caption="Zestawienie ilościowe wartości w kolumnach", position='h!')
+            caption=("Zestawienie ilościowe w wybranych kolumnach ",f"Liczebność: {col[0]}"), position='h!')
         )
     else:
+        n = len(data[col].dropna())
         tab1 = data[col].dropna().value_counts()
-        tab2 = (data[col].value_counts(normalize=True) * 100).round(1).astype(str) + "\%"
-        tab = pd.concat([tab1, tab2], axis=1, keys=['Liczebność', "Procent"]).sort_index()
+        tab2 = (data[col].value_counts(normalize=True) * 100).round(1).astype(str) + "%"
+        tab = pd.concat([tab1, tab2], axis=1, keys=[f'Ilość ($n={n}$)', "Procent"]).sort_index()
         _mc = tab1.idxmax()
         mc = tab2.max()
         chi, p, ds = chi3(tab1, True)
@@ -151,8 +156,8 @@ def counttable(data, col):
             prompt += "Powmocnicza tabela:\n {}".format(tab.to_markdown())
 
         tab.index.name = split_sentence(tab.index.name)
-        #tab.index = [ split_sentence(idx) for idx in list(tab.index) ]
+        tab.index = [split_sentence(idx) for idx in list(tab.index)]
         content = fix_desc(tab.to_latex(
-            caption="Zestawienie ilościowe wartości w kolumnie {}. {}".format(col, ds), position='h!')
+            caption=(f"Zestawienie ilościowe wartości w kolumnie {col}. {ds}", f"Liczebność: {col}"), position='h!')
         )
     return content, prompt, ''

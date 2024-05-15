@@ -18,13 +18,25 @@
 \usepackage[%%LANGUAGE%%]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage{%%FONT%%}
+
 \usepackage{listings}
 \usepackage{color}
 \usepackage{xcolor}
-\usepackage{hyperref}
+\usepackage{hyperref} % do linków wew
 \usepackage{subcaption}
 \usepackage{placeins}
 
+\usepackage{epigraph} % do cytatu
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{nameref} 
+\makeatletter
+\newcommand*{\currentname}{\@currentlabelname} % section name as \currentname
+\makeatother
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage{tabularx,ragged2e}
+\newcolumntype{C}{>{\Centering\arraybackslash}X}
 \usepackage{multicol}
 \usepackage{cleveref}
 \usepackage{siunitx}
@@ -38,12 +50,25 @@
 \setlength{\evensidemargin}{0mm}
 \setlength{\topmargin}{0mm}
 \setlength{\headsep}{10mm}
+\linespread{1.3}
 
 
-\newbox\flinebox 
-\newbox\slinebox
-\newbox\mlinebox
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
 
+\selectlanguage{%%LANGUAGE%%}
+
+\newgeometry{rmargin=2.5cm,lmargin=2.5cm,bmargin=2.5cm}
+\pagestyle{fancy}
+\rhead{\nouppercase{ \leftmark}}
+
+\chead{}
+\lhead{}
+\lfoot{}
+\cfoot{\thepage  }
+\rfoot{}
 
 %\usepackage[firstpage=true]{background}
 \usepackage[]{background}
@@ -58,55 +83,18 @@
 \fi
 \makeatother
 \backgroundsetup{
-	contents={\large{PRELIMINARY}},
-	%contents={\includegraphics{assets/watermark}},
-	angle=45,
-	scale=9,
-	color=red,
-	opacity=0.05
+        contents={\large{PRELIMINARY}},
+        %contents={\includegraphics{assets/watermark}},
+        angle=45,
+        scale=9,
+        color=red,
+        opacity=0.05
 }
-
-
-\lstdefinestyle{mystyle}{
-    backgroundcolor=\color{backcolour},   
-    commentstyle=\color{codegreen},
-    keywordstyle=\color{magenta},
-    numberstyle=\tiny\color{codegray},
-    stringstyle=\color{codepurple},
-    basicstyle=\footnotesize,
-    breakatwhitespace=false,         
-    breaklines=true,                 
-    captionpos=b,                    
-    keepspaces=true,                 
-    numbers=left,                    
-    numbersep=5pt,                  
-    showspaces=false,                
-    showstringspaces=false,
-    showtabs=false,                  
-    tabsize=2
-}
- 
-\definecolor{codegreen}{rgb}{0,0.6,0}
-\definecolor{codegray}{rgb}{0.5,0.5,0.5}
-\definecolor{codepurple}{rgb}{0.58,0,0.82}
-\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
-\lstset{style=mystyle}
-
-\selectlanguage{%%LANGUAGE%%}
-
-\newgeometry{rmargin=2.5cm,lmargin=2.5cm,bmargin=2.5cm}
-\pagestyle{fancy}
-\rhead{\nouppercase{ \leftmark}}
-
-\chead{}
-\lhead{}
-\lfoot{}
-\cfoot{\thepage  }
-\rfoot{}
 
 
 \renewcommand\listfigurename{}
 \renewcommand\listtablename{}
+
 
 \title{%%TITLE%%}
 \author{%%AUTHOR%%}
