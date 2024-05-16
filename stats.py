@@ -5,22 +5,23 @@ from addons import fm
 from click import style
 from pandas import DataFrame, crosstab
 
-from tables import eff
+from tables import eff, split_sentence
 from conf import crv, pval, tests_tab, corr_tab, tex_config, type_dict
 
 
-def make_stat(comm, df, c1, c2, power, mode='safe', passed=True,verb=True):
+def make_stat(comm, df, c1, c2, power, mode='safe', passed=True, verb=True):
     ddf, cr = auto_test(df, c1, c2, type_dict, power)
     if passed:
         ddf = ddf[(ddf['p'] < 0.05)]
-
-    tables,pm = tests_tab(ddf)
+    #import pdb
+    #pdb.set_trace()
+    tables, pm = tests_tab(ddf)
     corr = corr_tab(cr)
     commands = []
     id = "{}-{}".format(c1[0], c2[0])
-    for i,tab in enumerate(tables):
+    for i, tab in enumerate(tables):
         if len(tab) > 0:
-            commands.append(comm.register('gen', 'autostatable', [tab,pm[i]], mode='reload', alias=id + "A"))
+            commands.append(comm.register('gen', 'autostatable', [tab, pm[i]], mode='reload', alias=id + "A"))
             if verb:
                 commands.append(comm.register('gendesc', 'desc', id + "A", mode=mode, alias=id + "B"))
 
@@ -114,7 +115,7 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
     def fix_size(gsize, test_type='chi2'):  # change alg.
         prelen = len(gsize)
         _min = min_n[test_type][prelen]
-        gsize = gsize[gsize > _min]
+        #gsize = gsize[gsize > _min]
         gsize.dropna(inplace=True)
         if len(gsize) != prelen:
             print('Usunięto kategorie: {} - {}'.format(_groups, _values))
@@ -133,7 +134,7 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
                 print("- Calculating stat for  {} - {}".format(fm(_groups), fm(_values)))
                 gtype = type_detect(_groups)
                 vtype = type_detect(_values)
-                tdata = data[[_groups, _values]]
+                tdata = data[[_groups, _values]].dropna()
                 sub = 'norm'
                 if gtype == 'n' or gtype == 'o':
                     if vtype in ['q', 'o']:
@@ -205,8 +206,10 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
 
                 gtype = type_detect(group)
                 vtype = type_detect(value)
-                gr = data[group]
-                vl = data[value]
+                # nan fix by dt
+                dt = data[[group, value]].dropna()
+                gr = dt[group]
+                vl = dt[value]
                 if gtype == 'q' and vtype == 'q':
                     corr, p = pearson(gr, vl)
                     print('calc pearson')

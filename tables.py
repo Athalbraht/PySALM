@@ -68,6 +68,8 @@ def corrtab(tab):
 
 
 def stattab(tab):
+    import pdb
+    pdb.set_trace()
     tab[0] = tab[0].round(3).astype(str)
     content = fix_desc(tab[0].to_latex(index=False,
                                        caption="Testy statystyczne dla {}".format(tab[1]), position='h!'))
@@ -135,13 +137,16 @@ def counttable(data, col):
         tab2 = "(" + (_tab1 / len(data) * 100).round(1).astype(str) + "%)"
         tab = tab1.astype(str) + " " + tab2.transpose()
         tab['p ($\\chi^2$)'] = chip
+        _col = list(tab.columns)
+        tab['N'] = [str(len(data[c].dropna())) for c in col]
         tab = tab.transpose()
         tab['p ($\\chi^2$)'] = chip2
         tab = tab.transpose()
         tab = tab.replace(np.nan, '-')
+        tab = tab[['N'] + _col]
         tab.index = [split_sentence(idx) for idx in list(tab.index)]
         content = fix_desc(tab.to_latex(
-            caption=("Zestawienie ilościowe w wybranych kolumnach ",f"Liczebność: {col[0]}"), position='h!')
+            caption=("Zestawienie ilościowe w wybranych kolumnach ", f"Liczebność: {col[0]}"), position='h!')
         )
     else:
         n = len(data[col].dropna())
