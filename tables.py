@@ -68,8 +68,22 @@ def corrtab(tab):
 
 
 def stattab(tab):
-    import pdb
-    pdb.set_trace()
+    #import pdb
+    #pdb.set_trace()
+    # adding APA-like headers
+    columns = list(tab[0].columns)
+    header = [(tab[1][1][0], columns[0])]
+    gcolumns = []
+    if 'chi' not in tab[1][0]:
+        gcolumns = list(tab[1][1][1])
+    for gc, gcolumn in enumerate(gcolumns):
+        header.append((gcolumn, columns[1 + gc * 2]))
+        header.append((gcolumn, columns[1 + gc * 2 + 1]))
+    for column in columns[1+(len(gcolumns)-1)*2+2::]:
+        header.append((tab[1][0], column))
+    header = pd.MultiIndex.from_tuples(header)
+    tab[0].columns = header
+
     tab[0] = tab[0].round(3).astype(str)
     content = fix_desc(tab[0].to_latex(index=False,
                                        caption="Testy statystyczne dla {}".format(tab[1]), position='h!'))
