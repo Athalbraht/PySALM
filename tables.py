@@ -32,35 +32,34 @@ def chi3(values, v=False):
 def eff(e, tp):
     if tp == 'chi2':
         crv = {
-            "brak": 0.1,
-            "słaba": 0.15,
-            "umiarkowana": 0.25,
-            "silna": 1,
+            "słaba": 0.3,
+            "umiarkowana": 0.5,
+            "silna": 0.7,
         }
     elif tp == 'n':
         crv = {
-            "brak": 0.3,
-            "słaba": 0.5,
-            "umiarkowana": 0.7,
-            "silna": 1,
+            "słaba": 0.3,
+            "umiarkowana": 0.5,
+            "silna": 0.7,
         }
     elif tp == 'corr':
         crv = {
-            "brak": 0.3,
-            "słaba": 0.5,
-            "umiarkowana": 0.7,
-            "silna": 1,
+            "słaba": 0.3,
+            "umiarkowana": 0.5,
+            "silna": 0.7,
         }
     for i, j in crv.items():
         if j < e:
             continue
         else:
             return i
-    return 'bardzo silna'
+    return 'b. silna'
 
 
 def corrtab(tab):
     tab = tab.round(3).astype(str)
+    #col = [ (split_sentence(c[0], 25), c[1]) for c in list(tab.columns) ]
+    #tab.columns = pd.MultiIndex.from_tuples(col)
     content = fix_desc(tab.to_latex(
         caption="Macierz korelacji", position='h!'))
     prompt = " "
@@ -68,25 +67,36 @@ def corrtab(tab):
 
 
 def stattab(tab):
-    #import pdb
-    #pdb.set_trace()
     # adding APA-like headers
     columns = list(tab[0].columns)
-    header = [(tab[1][1][0], columns[0])]
+    header = [[split_sentence(tab[1][1][0], n=25), columns[0]]]
     gcolumns = []
+
     if 'chi' not in tab[1][0]:
         gcolumns = list(tab[1][1][1])
+
+    underline = "} \\\\\n  "
+    for cmid in range(len(gcolumns)):
+        underline += f"\\cmidrule(r){{{2 + cmid * 2}-{3 + cmid * 2}}} "
+    underline += f"\\cmidrule(r){{{4 + (len(gcolumns) - 1) * 2}-{6 + (len(gcolumns) - 1)*2}}}%X%"
+
+
     for gc, gcolumn in enumerate(gcolumns):
-        header.append((gcolumn, columns[1 + gc * 2]))
-        header.append((gcolumn, columns[1 + gc * 2 + 1]))
-    for column in columns[1+(len(gcolumns)-1)*2+2::]:
-        header.append((tab[1][0], column))
+        header.append([gcolumn, columns[1 + gc * 2]])
+        header.append([gcolumn, columns[1 + gc * 2 + 1]])
+
+    for column in columns[1 + (len(gcolumns) - 1) * 2 + 2::]:
+        header.append([tab[1][0]+underline, column])
+
+
+    #header[-1][0] += underline
     header = pd.MultiIndex.from_tuples(header)
     tab[0].columns = header
+    tab[0][header[0]] = tab[0][header[0]].apply(split_sentence, args=[25])
 
     tab[0] = tab[0].round(3).astype(str)
     content = fix_desc(tab[0].to_latex(index=False,
-                                       caption="Testy statystyczne dla {}".format(tab[1]), position='h!'))
+                                       caption="Testy statystyczne dla {} hipoteza N".format(tab[1][1][0]), position='h!'))
     prompt = " "
     return content, prompt, 'to jest isidaiwfla'
 

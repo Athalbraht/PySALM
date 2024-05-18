@@ -3,7 +3,7 @@ import scipy as sp
 import statsmodels.stats.power as smp
 from addons import fm
 from click import style
-from pandas import DataFrame, crosstab
+from pandas import DataFrame, crosstab, concat, read_pickle
 
 from tables import eff, split_sentence
 from conf import crv, pval, tests_tab, corr_tab, tex_config, type_dict
@@ -13,8 +13,8 @@ def make_stat(comm, df, c1, c2, power, mode='safe', passed=True, verb=True):
     ddf, cr = auto_test(df, c1, c2, type_dict, power)
     if passed:
         ddf = ddf[(ddf['p'] < 0.05)]
-    #import pdb
-    #pdb.set_trace()
+    # import
+    # .set_trace()
     tables, pm = tests_tab(ddf)
     corr = corr_tab(cr)
     commands = []
@@ -115,7 +115,7 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
     def fix_size(gsize, test_type='chi2'):  # change alg.
         prelen = len(gsize)
         _min = min_n[test_type][prelen]
-        #gsize = gsize[gsize > _min]
+        # gsize = gsize[gsize > _min]
         gsize.dropna(inplace=True)
         if len(gsize) != prelen:
             print('Usunięto kategorie: {} - {}'.format(_groups, _values))
@@ -227,6 +227,21 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
                 print(e)
                 import pdb
                 pdb.set_trace()
+
+    try:
+        _df = read_pickle('StatTests_results.pickle')
+        _df_corr = read_pickle('StatCorr_results.pickle')
+    except:
+        _df = DataFrame()
+        _df_corr = DataFrame()
+    else:
+        _df = concat([_df, df])
+        _df_corr = concat([_df_corr, df_corr])
+        _df_corr = _df_corr[~_df_corr[['X', 'Y']].duplicated(keep='last')]
+        _df = _df[~_df[['groups', 'values']].duplicated(keep='last')]
+    finally:
+        _df.to_pickle('StatTests_results.pickle')
+        _df_corr.to_pickle('StatCorr_results.pickle')
 
     return df, df_corr
 

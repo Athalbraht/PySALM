@@ -177,6 +177,7 @@ class Analysis:
     def build_document(self):
         print('\t- Applying payloads & building document')
         self.document.apply_payloads()  # self.command_manager.commands)
+        self.document.replace_marks()
 
     def queue_organizer(self, queue):
         """Organize analysis instruction based on priority of funcions."""

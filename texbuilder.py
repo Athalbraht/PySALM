@@ -8,6 +8,7 @@ from commands import CommandTemplate
 
 TeXbuilder = TypeVar('TeXbuilder')
 
+
 class TeXbuilder():
     """Create review section."""
 
@@ -37,7 +38,8 @@ class TeXbuilder():
     def add_section(self, title, commands, *args, **kwargs):
         """Create instance of yourself and add to dict."""
         new_head = self.head + "sub"
-        self.sections[title] = TeXbuilder(title, head=new_head, commands=commands, depth=self.depth + 1, config=self.config, *args, **kwargs)
+        self.sections[title] = TeXbuilder(title, head=new_head, commands=commands,
+                                          depth=self.depth + 1, config=self.config, *args, **kwargs)
         return self.sections[title]
 
     def apply_payloads(self, queue={}, last_section=''):
@@ -45,8 +47,8 @@ class TeXbuilder():
             queue = self.sections
         for section, subsections in queue.items():
             section_name = "\FloatBarrier\n\n\{}section{{{}}}\n\n{}\n\quad\n{}".format('sub' * subsections.depth, section,
-                                                                       "%%PRE{}".format(section),
-                                                                       self.postload_alias)
+                                                                                       "%%PRE{}".format(section),
+                                                                                       self.postload_alias)
             self._update_doc(section_name)
             if len(subsections.sections) > 0:  # isinstance(commands, list):
                 self.apply_payloads(subsections.sections, last_section=section)
@@ -56,7 +58,7 @@ class TeXbuilder():
 
     def _update_doc(self, payload: str, kind : str = '', last_section : str = '') -> None:
         content = read_file(self.document)
-        temp = '' # if loc= pre, add new prealias at the end of template
+        temp = ''  # if loc= pre, add new prealias at the end of template
         loc = self.postload_alias
         # Inserting constants
         for constant, _content in self.constants.items():
@@ -68,8 +70,8 @@ class TeXbuilder():
                     template = template.replace(constant, _content)
                 except Exception as e:
                     print(e)
-                    #import pdb
-                    #pdb.set_trace()
+                    # import pdb
+                    # pdb.set_trace()
             # payload = "{}\n{}".format(self.preload_alias, template)
             if payload['%%LOC'] == 'pre':
                 loc = "%%PRE{}".format(last_section)
@@ -102,6 +104,20 @@ class TeXbuilder():
             else:
                 _obj.commands = value
                 self.queue.append([section, value])
+
+    def replace_marks(self):
+        static = {
+            '\\%X\\%} \\\\' : "",
+            'mn{2}{r}' : "mn{2}{c}", 
+            'mn{3}{r}' : "mn{3}{c}", 
+        }
+        content = read_file(self.document)
+        print("- Replacing marks: ", end='')
+        for ffrom, tto in static.items():
+            content = content.replace(ffrom, tto)
+
+        write_file(self.document, content)
+        print(fm('Done'))
 
     def __repr__(self):
         """Make self.sections readable."""
