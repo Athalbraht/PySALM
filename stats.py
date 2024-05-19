@@ -5,7 +5,7 @@ from addons import fm
 from click import style
 from pandas import DataFrame, crosstab, concat, read_pickle
 
-from tables import eff, split_sentence
+from tables import eff, split_sentence, eff_t
 from conf import crv, pval, tests_tab, corr_tab, tex_config, type_dict
 
 
@@ -16,6 +16,7 @@ def make_stat(comm, df, c1, c2, power, mode='safe', passed=True, verb=True):
     # import
     # .set_trace()
     tables, pm = tests_tab(ddf)
+    cr['short'] = cr['$\\rho$'].round(2).astype(str) + " (" + cr['p'].round(3).astype(str) + ')(' + cr['Skala efektu'].apply(eff_t, args=[True]) + ")"
     corr = corr_tab(cr)
     commands = []
     id = "{}-{}".format(c1[0], c2[0])
@@ -147,7 +148,7 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
                             for i in data_list:
                                 flat += i.to_list()
                             _, p = sp.stats.shapiro(flat)
-                            if p < 0.05:
+                            if p < 0.1:
                                 sub = 'rm'
                             values_q.append(vtype)
                         elif vtype == 'o':
