@@ -107,7 +107,10 @@ def stattab(tab):
     tab[0][header[0]] = tab[0][header[0]].apply(split_sentence, args=[25])
 
     tab[0] = tab[0].round(3).astype(str)
-    tab[0][header[-1]] = tab[0][header[-1]].apply(lambda x: f'({eff(float(x), ttype, True)}) {x}')  # eff interpretation
+    tab[0][header[-1]] = tab[0][header[-1]].apply(lambda x: f'({eff(float(x), ttype, True)}) {x}')
+    # import pdb
+    # pdb.set_trace()
+    tab[0] = tab[0].apply(lambda x: '\\centered{' + x + '}') # center cells
     content = fix_desc(tab[0].to_latex(index=False,
                                        caption="Testy statystyczne dla {} hipoteza N".format(tab[1][1][0]), position='h!'))
     prompt = " "
