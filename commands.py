@@ -209,9 +209,17 @@ class CountTableCommand(CommandTemplate):
         self.apply_payload(table)
 
 
+class PivotTableCommand(CommandTemplate):
+    def execute(self):
+        table, desc, summary = tables.pivottable(self.df, self.ctx)
+        self.summary = summary
+        self.calculated = True
+        self.responses.update_desc(self.alias, desc)
+        self.apply_payload(table)
+
 class CrossTableCommand(CommandTemplate):
     def execute(self):
-        table, desc, summary = tables.desctable(self.df[self.ctx])
+        table, desc, summary = tables.crosstable(self.df, self.ctx)
         self.summary = summary
         self.calculated = True
         self.responses.update_desc(self.alias, desc)

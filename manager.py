@@ -47,6 +47,7 @@ class CommandManager():
                 'desctable': DescTableCommand,
                 'counttable': CountTableCommand,
                 'crosstable': CrossTableCommand,
+                #'pivottable': PivotTableCommand,
                 'expandtable': ExpandTableCommand,
                 'plot': PlotCommand,
                 'powerplot': PowerPlotCommand,

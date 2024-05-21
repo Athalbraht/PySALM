@@ -3,22 +3,8 @@ from scipy.stats import shapiro, chisquare
 import numpy as np
 
 
-from addons import fix_desc
+from addons import fix_desc, split_sentence
 from conf import tab_path
-
-
-def split_sentence(text, n=40):
-    lines = []
-    curr_line = []
-    for char in text:
-        curr_line.append(char)
-        if len(curr_line) >= n and char == ' ':
-            lines.append(''.join(curr_line))
-            curr_line = []
-
-    if curr_line:
-        lines.append(''.join(curr_line))
-    return '\\\\\hspace{0.4cm}'.join(lines)
 
 
 def chi3(values, v=False):
@@ -79,6 +65,7 @@ def corrtab(tab):
 
 
 def stattab(tab):
+    # tab struct: tab [data/info] info: (ttype, [colname, [colsub]], ...)
     # adding APA-like headers
     ttype = 'chi2'
     columns = list(tab[0].columns)
@@ -89,28 +76,25 @@ def stattab(tab):
         gcolumns = list(tab[1][1][1])
         ttype = 'n'
 
-    underline = "} \\\\\n  "
+    underline = "} \\\\\n  "  # fake end row } \\ -> newline -> cmidrule
     for cmid in range(len(gcolumns)):
-        underline += f"\\cmidrule(r){{{2 + cmid * 2}-{3 + cmid * 2}}} "
-    underline += f"\\cmidrule(r){{{4 + (len(gcolumns) - 1) * 2}-{6 + (len(gcolumns) - 1) * 2}}}%X%"
+        underline += f"\\cmidrule(r){{{2 + cmid * 2}-{3 + cmid * 2}}} "  # add cmidrule(r){colsub_pos}a
+    underline += f"\\cmidrule(r){{{4 + (len(gcolumns) - 1) * 2}-{6 + (len(gcolumns) - 1) * 2}}}%X%"  # cmidrule for tests (3x) & mark4f&r
 
     for gc, gcolumn in enumerate(gcolumns):
-        header.append([gcolumn, columns[1 + gc * 2]])
+        header.append([gcolumn, columns[1 + gc * 2]])  # create MultiIndex entry 4 subcol, gc*step (mean,std)
         header.append([gcolumn, columns[1 + gc * 2 + 1]])
 
-    for column in columns[1 + (len(gcolumns) - 1) * 2 + 2::]:
-        header.append([tab[1][0] + underline, column])
+    for column in columns[1 + (len(gcolumns) - 1) * 2 + 2::]:  # same by for the rest of cols (tests)
+        header.append([tab[1][0] + underline, column])  # entry for test + fake endline4cmidrule
 
-    # header[-1][0] += underline
     header = pd.MultiIndex.from_tuples(header)
-    tab[0].columns = header
+    tab[0].columns = header 
     tab[0][header[0]] = tab[0][header[0]].apply(split_sentence, args=[25])
 
     tab[0] = tab[0].round(3).astype(str)
-    tab[0][header[-1]] = tab[0][header[-1]].apply(lambda x: f'({eff(float(x), ttype, True)}) {x}')
-    # import pdb
-    # pdb.set_trace()
-    tab[0] = tab[0].apply(lambda x: '\\centered{' + x + '}') # center cells
+    tab[0][header[-1]] = tab[0][header[-1]].apply(lambda x: f'({eff(float(x), ttype, True)}) {x}') # add eff_size mark (W)0.2
+    tab[0] = tab[0].apply(lambda x: '\\centered{' + x + '}')  # center cells
     content = fix_desc(tab[0].to_latex(index=False,
                                        caption="Testy statystyczne dla {} hipoteza N".format(tab[1][1][0]), position='h!'))
     prompt = " "
@@ -157,10 +141,35 @@ def expandtable(data, col):
     tab2 = (tab1 / len(data) * 100).round(1).astype(str) + "%"
     tab = pd.concat([tab1, tab2, tab_s], axis=1, keys=[f'Ilość ($n={n}$)', "Częstość wyboru", "Suma"])
     tab.index = [split_sentence(idx) for idx in list(tab.index)]
+    #tab.index.name = split_sentence(col)
+    #tab = tab.astype(str).apply(lambda x: '\\centered{' + x + '}')  # center cells
     content = fix_desc(tab.to_latex(
         caption="Rozkład wyborów w pytaniu '{}'.".format(col), position='h!'))
     prompt = "Tabela wyborów w pytaniu: {}. Tabela:\n{}".format(col, tab.to_markdown())
     return content, prompt, 'Et'
+
+
+def crosstable(data, col, margins=True, **kwargs):
+    x = [data[c] for c in col[0]]
+    y = [data[c] for c in col[1]]
+    tab1 = pd.crosstab(x, y, margins=margins, **kwargs).astype(str)
+    tab2 = (pd.crosstab(x, y, margins=margins, normalize=True, **kwargs) * 100).round(1).astype(str)
+    tab = tab1 + " (" + tab2 + "%)"
+
+    index_name = split_sentence(tab.index.name)
+    tab.index = [split_sentence(idx) for idx in list(tab.index)]
+    tab.index.name = index_name
+    tab.columns.name = split_sentence(tab.columns.name)
+
+    tab = tab.apply(lambda x: '\\centered{' + x + '}')  # center cells
+    content = fix_desc(tab.to_latex(
+        caption=f'Tabela krzyżowa "{col[0]}" względem "{col[1]}." ', position='h!'))
+    prompt = "Tabela krzyżowa"
+    return content, prompt, ''
+
+
+def pivottable(data, col):
+    return "", "", ""
 
 
 def counttable(data, col):
@@ -185,6 +194,7 @@ def counttable(data, col):
         tab = tab.replace(np.nan, '-')
         tab = tab[['N'] + _col]
         tab.index = [split_sentence(idx) for idx in list(tab.index)]
+        #tab = tab.astype(str).apply(lambda x: '\\centered{' + x + '}')  # center cells
         content = fix_desc(tab.to_latex(
             caption=("Zestawienie ilościowe w wybranych kolumnach ", f"Liczebność: {col[0]}"), position='h!')
         )
@@ -200,8 +210,10 @@ def counttable(data, col):
         if len(tab1.index) > 2:
             prompt += "Powmocnicza tabela:\n {}".format(tab.to_markdown())
 
-        tab.index.name = split_sentence(tab.index.name)
+       # _index_name = split_sentence(tab.index.name)
         tab.index = [split_sentence(idx) for idx in list(tab.index)]
+        #tab.index.name = _index_name
+        #tab = tab.astype(str).apply(lambda x: '\\centered{' + x + '}')  # center cells
         content = fix_desc(tab.to_latex(
             caption=(f"Zestawienie ilościowe wartości w kolumnie {col}. {ds}", f"Liczebność: {col}"), position='h!')
         )

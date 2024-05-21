@@ -1,9 +1,22 @@
+import numpy as np
 from click import style
 from pandas import DataFrame
 
 from alias import c
 from conf import nominal_data, ordinal_data, quantitative_data, tab_path
 
+def split_sentence(text, n=40):
+    lines = []
+    curr_line = []
+    for char in text:
+        curr_line.append(char)
+        if len(curr_line) >= n and char == ' ':
+            lines.append(''.join(curr_line))
+            curr_line = []
+
+    if curr_line:
+        lines.append(''.join(curr_line))
+    return '\\\\\hspace{0.4cm}'.join(lines)
 
 def write_file(path: str, content: str) -> None:
     with open(path, 'w') as file:
@@ -41,6 +54,40 @@ def type_detector(names, alias=False):
             exit()
         types.append(_type)
     return "".join(types)
+
+
+def make_poll_tab(df, cols):
+    # types[value_counts][explode][types]
+    types = {
+            'Wielokrotny wybór:' : (True, True, [list]),
+            'Wybór:' :(True, False, [str]),
+            'Wartość liczbowa' : (False, False, [np.int64, np.float64]),
+            }
+    print("- Creating poll table (apx)", end='')
+    columns, values = [], []
+    for col in cols:
+        added = False
+        for k,v  in types.items():
+            for tp in v[2]:
+                if isinstance(df[col].dropna().iloc[0], tp):
+                    columns.append(col)
+                    values.append(k)
+                    added = True
+                    if v[0]:
+                        if v[1]:
+                            val_count = list(df[col].dropna().explode().value_counts().index)
+                        else:
+                            val_count = list(df[col].dropna().value_counts().index)
+                        for choice in val_count:
+                            columns.append('')
+                            values.append(f'- {choice}')
+        if not added:
+            columns.append(col)
+            values.append('Nieznany')
+    poll = DataFrame({'Pytanie':columns, "Typ odpowiedzi":values})
+    print(fm('Done'))
+    #return poll.to_latex(index=False, longtable=True)
+    return poll.to_html('poll.html')
 
 
 def make_alias_cheetsheet():
