@@ -10,7 +10,13 @@ from conf import tab_path
 def chi3(values, v=False):
     chi, p = chisquare(values)
     if v:
-        return chi, p, "$\\chi^2={};\\rho={}$".format(chi.round(2), p.round(2))
+        pp = str(p.round(2))
+        if pp == '0.0':
+            pp = '$p\\ll\\alpha$'
+        else: 
+            pp = f'p={pp}'
+        ds = "$\\chi^2={};{}$".format(chi.round(2), pp)
+        return chi, p, ds
     else:
         return p
 
@@ -140,10 +146,13 @@ def expandtable(data, col):
     tab_s = (data[col].explode().value_counts(normalize=True).cumsum() * 100).round(1).astype(str) + "%"
     tab2 = (tab1 / len(data) * 100).round(1).astype(str) + "%"
     tab = pd.concat([tab1, tab2, tab_s], axis=1, keys=[f'Ilość ($n={n}$)', "Częstość wyboru", "Suma"])
-    tab.index = [split_sentence(idx) for idx in list(tab.index)]
-    #tab.index.name = split_sentence(col)
-    #tab = tab.astype(str).apply(lambda x: '\\centered{' + x + '}')  # center cells
-    content = fix_desc(tab.to_latex(
+    resp = [split_sentence(idx) for idx in list(tab.index)]
+    _col = split_sentence(col)
+    tab[_col] = resp
+    cols = list(tab.columns)
+    tab = tab[[cols[-1]]+cols[:-1]]
+    tab = tab.astype(str).apply(lambda x: '\\centered{' + x + '}')  # center cells
+    content = fix_desc(tab.to_latex(index=False,
         caption="Rozkład wyborów w pytaniu '{}'.".format(col), position='h!'))
     prompt = "Tabela wyborów w pytaniu: {}. Tabela:\n{}".format(col, tab.to_markdown())
     return content, prompt, 'Et'
@@ -163,7 +172,7 @@ def crosstable(data, col, margins=True, **kwargs):
 
     tab = tab.apply(lambda x: '\\centered{' + x + '}')  # center cells
     content = fix_desc(tab.to_latex(
-        caption=f'Tabela krzyżowa "{col[0]}" względem "{col[1]}." ', position='h!'))
+        caption=f'Tabela krzyżowa: {col[0][0]} względem {col[1][0]}', position='h!'))
     prompt = "Tabela krzyżowa"
     return content, prompt, ''
 
@@ -194,7 +203,7 @@ def counttable(data, col):
         tab = tab.replace(np.nan, '-')
         tab = tab[['N'] + _col]
         tab.index = [split_sentence(idx) for idx in list(tab.index)]
-        #tab = tab.astype(str).apply(lambda x: '\\centered{' + x + '}')  # center cells
+        tab = tab.astype(str).apply(lambda x: '\\centered{' + x + '}')  # center cells
         content = fix_desc(tab.to_latex(
             caption=("Zestawienie ilościowe w wybranych kolumnach ", f"Liczebność: {col[0]}"), position='h!')
         )
@@ -210,11 +219,15 @@ def counttable(data, col):
         if len(tab1.index) > 2:
             prompt += "Powmocnicza tabela:\n {}".format(tab.to_markdown())
 
-       # _index_name = split_sentence(tab.index.name)
-        tab.index = [split_sentence(idx) for idx in list(tab.index)]
+        _index_name = split_sentence(tab.index.name) + f"\\\\{ds}" 
+        resp  = [split_sentence(idx) for idx in list(tab.index)]
         #tab.index.name = _index_name
-        #tab = tab.astype(str).apply(lambda x: '\\centered{' + x + '}')  # center cells
-        content = fix_desc(tab.to_latex(
-            caption=(f"Zestawienie ilościowe wartości w kolumnie {col}. {ds}", f"Liczebność: {col}"), position='h!')
+        tab[_index_name] = resp
+        cols = list(tab.columns)
+        tab = tab[[cols[-1]] + cols[:-1]]
+        tab = tab.astype(str).apply(lambda x: '\\centered{' + x + '}')  # center cells
+        content = fix_desc(tab.to_latex(index=False,
+            caption=(f"Zestawienie ilościowe wartości w kolumnie {col}", f"Liczebność: {col}"), position='h!')
+                           
         )
     return content, prompt, ''
