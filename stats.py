@@ -10,11 +10,10 @@ from conf import crv, pval, tests_tab, corr_tab, tex_config, type_dict
 
 
 def make_stat(comm, df, c1, c2, power, mode='safe', passed=True, verb=True):
+    #df = df.replace('nie wiem/nie mam zdania', np.nan).replace('nie wiem/nie pamiętam', np.nan)
     ddf, cr = auto_test(df, c1, c2, type_dict, power)
     if passed:
         ddf = ddf[(ddf['p'] < 0.05)]
-    # import
-    # .set_trace()
     tables, pm = tests_tab(ddf)
     cr['short'] = cr['$\\rho$'].round(2).astype(str) + " (" + cr['p'].round(3).astype(str) + \
         ')(' + cr['Skala efektu'].apply(eff_t, args=[True]) + ")"
@@ -138,7 +137,7 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
                 vtype = type_detect(_values)
                 tdata = data[[_groups, _values]].dropna()
                 sub = 'norm'
-                if gtype == 'n' or gtype == 'o':
+                if gtype == 'n':
                     if vtype in ['q', 'o']:
                         gsize = tdata.groupby(_groups).count()
                         fixed_col = fix_size(gsize, test_type='F')
@@ -401,8 +400,9 @@ def mannwhitneyu(ct1, ct2):
 
 
 def kruskal(*ct):
+    ct = list(ct)
     for i, ii in enumerate(ct):
-        ct[i] = ii.apply(lambda x: int(str(x).split('.')[0]))
+        ct[i] = ii.apply(lambda x: float(str(x).split('.')[0]))
     stat, p = sp.stats.kruskal(*ct)
     n = sum([len(i) for i in ct])
 

@@ -13,7 +13,7 @@ def chi3(values, v=False):
         pp = str(p.round(2))
         if pp == '0.0':
             pp = '$p\\ll\\alpha$'
-        else: 
+        else:
             pp = f'p={pp}'
         ds = "$\\chi^2={};{}$".format(chi.round(2), pp)
         return chi, p, ds
@@ -95,11 +95,11 @@ def stattab(tab):
         header.append([tab[1][0] + underline, column])  # entry for test + fake endline4cmidrule
 
     header = pd.MultiIndex.from_tuples(header)
-    tab[0].columns = header 
+    tab[0].columns = header
     tab[0][header[0]] = tab[0][header[0]].apply(split_sentence, args=[25])
 
     tab[0] = tab[0].round(3).astype(str)
-    tab[0][header[-1]] = tab[0][header[-1]].apply(lambda x: f'({eff(float(x), ttype, True)}) {x}') # add eff_size mark (W)0.2
+    tab[0][header[-1]] = tab[0][header[-1]].apply(lambda x: f'({eff(float(x), ttype, True)}) {x}')  # add eff_size mark (W)0.2
     tab[0] = tab[0].apply(lambda x: '\\centered{' + x + '}')  # center cells
     content = fix_desc(tab[0].to_latex(index=False,
                                        caption="Testy statystyczne dla {} hipoteza N".format(tab[1][1][0]), position='h!'))
@@ -150,10 +150,10 @@ def expandtable(data, col):
     _col = split_sentence(col)
     tab[_col] = resp
     cols = list(tab.columns)
-    tab = tab[[cols[-1]]+cols[:-1]]
+    tab = tab[[cols[-1]] + cols[:-1]]
     tab = tab.astype(str).apply(lambda x: '\\centered{' + x + '}')  # center cells
     content = fix_desc(tab.to_latex(index=False,
-        caption="Rozkład wyborów w pytaniu '{}'.".format(col), position='h!'))
+                                    caption="Rozkład wyborów w pytaniu '{}'.".format(col), position='h!'))
     prompt = "Tabela wyborów w pytaniu: {}. Tabela:\n{}".format(col, tab.to_markdown())
     return content, prompt, 'Et'
 
@@ -219,15 +219,15 @@ def counttable(data, col):
         if len(tab1.index) > 2:
             prompt += "Powmocnicza tabela:\n {}".format(tab.to_markdown())
 
-        _index_name = split_sentence(tab.index.name) + f"\\\\{ds}" 
-        resp  = [split_sentence(idx) for idx in list(tab.index)]
-        #tab.index.name = _index_name
+        _index_name = split_sentence(tab.index.name) + f"\\\\{ds}"
+        resp = [split_sentence(idx) for idx in list(tab.index)]
+        # tab.index.name = _index_name
         tab[_index_name] = resp
         cols = list(tab.columns)
         tab = tab[[cols[-1]] + cols[:-1]]
         tab = tab.astype(str).apply(lambda x: '\\centered{' + x + '}')  # center cells
         content = fix_desc(tab.to_latex(index=False,
-            caption=(f"Zestawienie ilościowe wartości w kolumnie {col}", f"Liczebność: {col}"), position='h!')
-                           
-        )
+                                        caption=(f"Zestawienie ilościowe wartości w kolumnie {col}", f"Liczebność: {col}"), position='h!')
+
+                           )
     return content, prompt, ''

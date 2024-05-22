@@ -6,7 +6,7 @@ import statsmodels.stats.power as smp
 from stats import r2
 import scipy as sp
 from click import style
-from pandas import DataFrame
+from pandas import DataFrame, melt
 
 from addons import type_detector
 from conf import pic_ext, sns, sns_api, tex_config
@@ -43,15 +43,21 @@ def plot_power(cat=10, effect_size=[0.5, 0.99], a=0.05, lx=30, max_p=0.8, alias=
     return path, " ", caption
 
 
-def plot(data, pset, alias, labels=[False, False], **conf):
+def plot(data, pset, alias, labels=[False, False], melt_value=[], melt_id=[], **conf):
     """Auto print graphs."""
     # ordinal_data plot
     # 2D temp map for p val
     plt.clf()
     plt.cla()
     caption = ''
-    types = type_detector(pset)
-    validator = types
+    if melt_value:
+        data = melt(data, id_vars=melt_id, value_vars=melt_value, var_name=pset[0], value_name=pset[1])
+        validator = 'nq' 
+        if melt_id:
+            conf['hue'] = melt_id[0]
+    else:
+        types = type_detector(pset)
+        validator = types
     #####################################################################
     if len(pset) == 1:
         x = pset[0]
@@ -88,6 +94,7 @@ def plot(data, pset, alias, labels=[False, False], **conf):
                 "kind" : "box",
             }
             kwargs.update(sns_api)
+            kwargs.update(conf)
             g = sns.catplot(data, x=x, y=y, **kwargs)
             caption = 'Rozkład zmiennych {} i {}'.format(x, y)
             g.fig.set_figwidth(14)
@@ -103,6 +110,7 @@ def plot(data, pset, alias, labels=[False, False], **conf):
             g = sns.jointplot(data, x=x, y=y, **kwargs)
             r, p = sp.stats.pearsonr(data[x], data[y])
             rr = round(r2(data[x], data[y]), 3)
+            g.ax_joint.set_ylabel(y[:40])
             g.ax_joint.annotate('$R^2 = {}$'.format(rr),
                                 xy=(0.1, 0.7), xycoords='axes fraction',
                                 ha='left', va='center',
