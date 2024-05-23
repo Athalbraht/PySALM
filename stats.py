@@ -15,8 +15,7 @@ def make_stat(comm, df, c1, c2, power, mode='safe', passed=True, verb=True):
     if passed:
         ddf = ddf[(ddf['p'] < 0.05)]
     tables, pm = tests_tab(ddf)
-    cr['short'] = cr['$\\rho$'].round(2).astype(str) + " (" + cr['p'].round(3).astype(str) + \
-        ')(' + cr['Skala efektu'].apply(eff_t, args=[True]) + ")"
+    cr['short'] = '(' + cr['Skala efektu'].apply(eff_t, args=[True]).astype(str) + ") " + cr['$\\rho$'].round(2).astype(str) + " (" + cr['p'].round(3).astype(str) + ')'
     corr = corr_tab(cr)
     commands = []
     id = "{}-{}".format(c1[0], c2[0])
@@ -47,8 +46,9 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
                         'norm' : [mannwhitneyu, "F", "Manna-Whitneya", 'n'],
                     },
                     'q': {
-                        'norm': [ttest, "F", 'T', 'n'],
+                        #'norm': [ttest, "F", 'T', 'n'],
                         'rm': [mannwhitneyu, "F", "Manna-Whitneya", 'n'],
+                        'norm': [mannwhitneyu, "F", "Manna-Whitneya", 'n'],
                     },
                 },
                 '3': {
@@ -59,7 +59,8 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
                         'norm' : [kruskal, "F", 'Kruskal-Wallis', 'n'],
                     },
                     'q': {
-                        'norm': [anova, "F", "ANOVA", 'n'],
+                        #'norm': [anova, "F", "ANOVA", 'n'],
+                        'norm': [kruskal, "F", "Kruskala-Wallisa", 'n'],
                         'rm': [kruskal, "F", "Kruskala-Wallisa", 'n'],
                     },
                 },
