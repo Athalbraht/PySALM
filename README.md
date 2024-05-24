@@ -1,13 +1,14 @@
-# StatsPAI
+# DeepStat
 
-Under construction (v0.1 release)
+![tag](https://img.shields.io/github/tag-date/aszadzinski/deepstat.svg?style=flat-square)
+![pypi-status](https://img.shields.io/pypi/v/deepstat?style=flat-square)
+![commit](https://img.shields.io/github/last-commit/aszadzinski/deepstat.svg?style=flat-square)
+![license](https://img.shields.io/github/license/aszadzinski/deepstat.svg?style=flat-square)
+![python-version](https://img.shields.io/pypi/pyversions/pandas?style=flat-square)
 
-## TODO
+Data analysis software.
 
-- fix descriptions for tables, charts, stats,
-- additional setting for TablesCommand 
-- fix formatting
-    - prettier .tex
-    - rotated table and cols
-- add summary generator
+See [documentation](https://aszadzinski.github.io/deepstat/). Still in **BETA** version.
 
+
+---
