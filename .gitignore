@@ -5,6 +5,7 @@
 report
 *data*
 venv/
+*.lock
 
 ## DataFormats
 *conf.py
