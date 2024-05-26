@@ -4,6 +4,7 @@
 *.env*
 report
 *data*
+*.lock
 venv/
 
 ## DataFormats
