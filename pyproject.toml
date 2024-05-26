@@ -3,19 +3,19 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "DeepStat"
+name = "PySALM"
 version = "0.1.0"
-description = "Statistic analysis toolkit."
+description = "Pythonic Statistic Analysis toolkit powered by ML"
 authors = ["Athalbraht <contact.22cpu@aleeas.com>"]
 readme = "README.md"
 license = "GPL-3.0-or-later"
-packages = [{ include = "DeepStat" }]
-homepage = "https://aszadzinski.github.io/DeepStat"
-documentation = "https://aszadzinski.github.io/DeepStat/docs"
-repository = "https://github.com/aszadzinski/DeepStat"
+packages = [{ include = "PySALM" }]
+homepage = "https://aszadzinski.github.io/PySALM"
+documentation = "https://aszadzinski.github.io/PySALM/docs"
+repository = "https://github.com/aszadzinski/PySALM"
 
 [tool.poetry.scripts]
-deepstat = 'DeepStat.main:main'
+deepstat = 'PySALM.main:main'
 
 [tool.poetry.dependencies]
 python = "^3.10"

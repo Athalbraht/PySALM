@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-title: DeepStat
+title: PySALM
 message: >-
   If you use this software, please cite it using the
   metadata from this file.
@@ -12,12 +12,12 @@ authors:
     affiliation: University of Silesia
 identifiers:
   - type: url
-    value: 'https://github.com/aszadzinski/DeepStat'
+    value: 'https://github.com/aszadzinski/PySALM'
     description: Repo
-repository-code: 'https://github.com/aszadzinski/DeepStat'
+repository-code: 'https://github.com/aszadzinski/PySALM'
 abstract: >-
   Minimal user interaction statistical analysis software
-  powered by chatGPT 
+  powered by A.I. 
 keywords:
   - Statistics analysis
   - Deep Learning
