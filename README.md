@@ -4,9 +4,12 @@
 ![pypi-status](https://img.shields.io/pypi/v/pysalm)
 ![commit](https://img.shields.io/github/last-commit/aszadzinski/pysalm.svg)
 ![license](https://img.shields.io/github/license/aszadzinski/pysalm.svg)
-[![DOI](https://zenodo.org/badge/787179913.svg)](https://zenodo.org/doi/10.5281/zenodo.11292251)
+[![DOI](https://zenodo.org/badge/805985464.svg)](https://zenodo.org/doi/10.5281/zenodo.11310311)
 
-Python data analysis software.
+
+
+PySALM: Statistic Analysis & Machine Learning software 
+
 
 See [documentation](https://aszadzinski.github.io/pysalm/). Still in **BETA** version.
 

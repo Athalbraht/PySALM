@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-title: PySALM
+title: 'PySALM: Statistic Analysis & Machine Learning software'
 message: >-
   If you use this software, please cite it using the
   metadata from this file.
@@ -7,22 +7,19 @@ type: software
 authors:
   - given-names: Albert
     family-names: Szadziński
-    email: albert.szadzinski@us.edu.pl
     orcid: 'https://orcid.org/0000-0001-6864-8434'
-    affiliation: University of Silesia
+    email: albert.szadzinski@us.edu.pl
+    affiliation: Uniersity of Silesia
 identifiers:
-  - type: url
-    value: 'https://github.com/aszadzinski/PySALM'
-    description: Repo
-repository-code: 'https://github.com/aszadzinski/PySALM'
-abstract: >-
-  Minimal user interaction statistical analysis software
-  powered by A.I. 
+  - type: doi
+    value: 10.5281/zenodo.11310311
+repository-code: 'https://doi.org/10.5281/zenodo.11310312'
+url: 'https://aszadzinski.github.io/PySALM'
+repository: 'https://github.com/aszadzinski/PySALM/'
 keywords:
-  - Statistics analysis
+  - Statistic Analysis
+  - Machine Learning
+  - Python Programming Language
   - Deep Learning
-  - Numerical Methods
 license: GPL-3.0-or-later
-commit: 87eefc7400ab3e826ee40ea3793e5582570ed46a
-version: 0.1.1
-date-released: '2024-05-24'
+date-released: '2024-04-20'
