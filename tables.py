@@ -113,7 +113,11 @@ def desctable(data):
     col = tab.columns
     shapiro_col = {}
     for c in col:
-        shapiro_col[c] = str(round(shapiro(data[c])[1], 3))
+        _data = data[c].dropna()
+        sh_p = str(round(shapiro(_data)[1], 3))
+        if sh_p == "0.0":
+            sh_p = "$p\\ll \\alpha$"
+        shapiro_col[c] = sh_p
     shapiro_df = pd.DataFrame(shapiro_col, index=(['$\\rho$']))
     tab = pd.concat([tab, shapiro_df]).transpose()
     tab.index = [split_sentence(idx, 35) for idx in list(tab.index)]
