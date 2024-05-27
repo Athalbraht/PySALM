@@ -216,7 +216,7 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
                     corr, p = pearson(gr, vl)
                     print('calc pearson')
                     df_corr.loc[len(df_corr) + 1] = [group, value, corr['rPearson'], p, 'R-Pearson', corr, eff(corr['rPearson'], 'corr')]
-                elif gtype != 'n' and vtype != 'n' and gtype != 'multi' and vtype != 'multi':
+                elif gtype != 'n' and vtype != 'n' and gtype != 'm' and vtype != 'm':
                     if vtype == 'o':
                         vl = vl.apply(lambda x: int(str(x).split('.')[0]))
                     if gtype == 'o':

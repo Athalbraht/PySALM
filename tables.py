@@ -148,7 +148,7 @@ def expandtable(data, col):
     n = len(data[col].dropna())
     tab1 = data[col].explode().value_counts()
     tab_s = (data[col].explode().value_counts(normalize=True).cumsum() * 100).round(1).astype(str) + "%"
-    tab2 = (tab1 / len(data) * 100).round(1).astype(str) + "%"
+    tab2 = (tab1 / n * 100).round(1).astype(str) + "%"
     tab = pd.concat([tab1, tab2, tab_s], axis=1, keys=[f'Ilość ($n={n}$)', "Częstość wyboru", "Suma"])
     resp = [split_sentence(idx) for idx in list(tab.index)]
     _col = split_sentence(col)
