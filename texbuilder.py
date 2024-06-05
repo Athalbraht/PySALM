@@ -70,6 +70,7 @@ class TeXbuilder():
                     template = template.replace(constant, _content)
                 except Exception as e:
                     print(e)
+                    print("_ipdate_doc")
                     # import pdb
                     # pdb.set_trace()
             # payload = "{}\n{}".format(self.preload_alias, template)

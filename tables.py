@@ -3,7 +3,7 @@ from scipy.stats import shapiro, chisquare
 import numpy as np
 
 
-from addons import fix_desc, split_sentence
+from addons import fix_desc, split_sentence, fix_map
 from conf import tab_path
 
 
@@ -162,7 +162,8 @@ def expandtable(data, col):
     return content, prompt, 'Et'
 
 
-def crosstable(data, col, margins=True, **kwargs):
+def crosstable(_data, col, margins=True, **kwargs):
+    data = _data.map(fix_map)
     x = [data[c] for c in col[0]]
     y = [data[c] for c in col[1]]
     tab1 = pd.crosstab(x, y, margins=margins, **kwargs).astype(str)

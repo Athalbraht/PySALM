@@ -1,7 +1,7 @@
 import numpy as np
 import scipy as sp
 import statsmodels.stats.power as smp
-from addons import fm, split_sentence
+from addons import fm, split_sentence, fix_map
 from click import style
 from pandas import DataFrame, crosstab, concat, read_pickle
 
@@ -32,7 +32,7 @@ def make_stat(comm, df, c1, c2, power, mode='safe', passed=True, verb=True):
     return commands
 
 
-def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min_n: DataFrame, dep : str = 'ind', debug=False, debug_corr=False) -> DataFrame:
+def auto_test(_data : DataFrame, groups: list, values: list, type_dict: dict, min_n: DataFrame, dep : str = 'ind', debug=False, debug_corr=False) -> DataFrame:
     group_q, group_o = [], []
     values_q, values_o = [], []
     test_map = {
@@ -126,6 +126,7 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
     df = DataFrame(df_struct, dtype='object')
     corr_groups = []
     corr_values = []
+    data = _data.map(fix_map)
     for _groups in groups:
         corr_groups.append(_groups)
         for _values in values:
@@ -225,7 +226,7 @@ def auto_test(data : DataFrame, groups: list, values: list, type_dict: dict, min
                     corr, p = spearman(gr, vl)
                     df_corr.loc[len(df_corr) + 1] = [group, value, corr['rSpearman'], p, 'R-Spearman', corr, eff(corr['rSpearman'], 'corr')]
             except Exception as e:
-                print('Error {} {}'.format(group, value))
+                print('Error (auto_test) {} {}'.format(group, value))
                 print(e)
                 import pdb
                 pdb.set_trace()

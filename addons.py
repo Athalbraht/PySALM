@@ -5,6 +5,16 @@ from pandas import DataFrame
 from alias import c
 from conf import nominal_data, ordinal_data, quantitative_data, tab_path
 
+def fix_map(x):
+    try:
+        a = str(x)
+    except:
+        return np.nan
+    if "nie wiem" in a:
+        return np.nan
+    else:
+        return x
+
 def split_sentence(text, n=40):
     lines = []
     curr_line = []

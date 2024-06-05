@@ -130,8 +130,10 @@ class CommandManager():
                     print("\t\t- Executing command: {}: ".format(command.id), end='')
                     command.execute()
                 except Exception as e:
-                    print(fm("Fail", 'red'), end='')
+                    print(fm("Fail (exec_queue)", 'red'), end='')
                     print(" {}".format(e))
+                    import pdb
+                    pdb.set_trace()
                 else:
                     print(fm("Pass", 'green'))
 
@@ -157,7 +159,7 @@ class Analysis:
         try:
             os.mkdir(os.path.join(tex_config['folder'], 'pics'))
         except Exception as e:
-            print("folder exists, {}".format(fm('skip', 'red')))
+            print("folder exists (create_folders), {}".format(fm('skip', 'red')))
         else:
             print(fm('Done'))
 
@@ -211,6 +213,6 @@ class Analysis:
                 os.remove(filename + file)
 
         except Exception as e:
-            print("{} {}".format(fm("FAIL", "red"), e))
+            print("Compile {} {}".format(fm("FAIL", "red"), e))
         else:
             print(fm('DONE'))

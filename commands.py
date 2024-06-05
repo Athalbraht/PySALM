@@ -71,7 +71,7 @@ class CommandTemplate(Protocol):
             else:
                 raise BrokenPipeError(" Cannot return payload, not calculated yet")
         except Exception as e:
-            print(fm("Fail", "red"), end="")
+            print(fm("Fail (get_payload)", "red"), end="")
             print(" Cannot return payload, not calculated yet")
         else:
             return self.payload

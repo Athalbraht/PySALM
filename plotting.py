@@ -59,6 +59,7 @@ def plot(data, pset, alias, labels=[False, False], melt_value=[], melt_id=[], **
         types = type_detector(pset)
         validator = types
     #####################################################################
+    #data = data[~data[pset].isna()].copy()
     if len(pset) == 1:
         x = pset[0]
         if validator == 'n' or validator == 'o':
