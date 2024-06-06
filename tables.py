@@ -12,7 +12,7 @@ def chi3(values, v=False):
     if v:
         pp = str(p.round(2))
         if pp == '0.0':
-            pp = '$p\\ll\\alpha$'
+            pp = 'p\\ll\\alpha'
         else:
             pp = f'p={pp}'
         ds = "$\\chi^2={};{}$".format(chi.round(2), pp)
